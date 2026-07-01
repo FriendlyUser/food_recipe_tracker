@@ -1,0 +1,46 @@
+---
+// 全站共用的頁面骨架：doctype / head / Header / main / Footer。
+// 之後加全站性的東西（留言板、analytics、skip-link…）只改這裡。
+// 頁面自己的 <style>/<script> 照常寫在各頁，Astro 會自動歸位。
+import type { ImageMetadata } from 'astro';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { siteLocale } from '../i18n/ui';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: ImageMetadata;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  ogType?: 'website' | 'article'; // 文章頁傳 article
+  noindex?: boolean; // tags 等不想進索引的頁面
+  wide?: boolean;    // main 全寬（文章頁雙欄布局用），預設由 global.css 置中 720px
+}
+
+const { title, description, image, jsonLd, ogType, noindex = false, wide = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang={siteLocale.html}>
+	<head>
+		<BaseHead title={title} description={description} image={image} jsonLd={jsonLd} ogType={ogType} />
+		{noindex && <meta name="robots" content="noindex, follow" />}
+	</head>
+	<body>
+		<Header />
+		<main class:list={[{ wide }]}>
+			<slot />
+		</main>
+		<Footer />
+		<slot name="after-footer" />
+	</body>
+</html>
+
+<style>
+	main.wide {
+		width: calc(100% - 2em);
+		max-width: 100%;
+		margin: 0;
+	}
+</style>

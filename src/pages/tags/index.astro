@@ -1,0 +1,206 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TagTreeNode from '../../components/TagTreeNode.astro';
+import { SITE_TITLE } from '../../consts';
+import { taxonomy } from '../../data/taxonomy';
+import { getOrphanTags, toSlug } from '../../lib/taxonomy';
+import { useTranslations } from '../../i18n/utils';
+import { siteLocale } from '../../i18n/ui';
+const t = useTranslations();
+
+const posts = await getCollection('blog');
+
+// 計算每個 tag 的文章數（chips 顯示用；群組計數在 TagTreeNode 內算）
+const tagCount = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags ?? []) {
+    tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
+  }
+}
+
+// 未分類區＝公開的整理收件匣：孤兒 tag（不在 taxonomy 也非群組名）依篇數排序。
+// 樣式刻意做成「未完成」感，保留把它們收進樹裡的動機；沒有孤兒時整區不渲染。
+const orphanTags = getOrphanTags(tagCount.keys())
+  .sort((a, b) => (tagCount.get(b) ?? 0) - (tagCount.get(a) ?? 0) || a.localeCompare(b, siteLocale.intl));
+---
+
+<BaseLayout title={`${t('tags.title')} — ${SITE_TITLE}`} description={t('tags.metaDescription')} noindex>
+  <div class="tags-page">
+    <h1>{t('tags.title')}</h1>
+    <div class="tag-tree">
+      {Object.entries(taxonomy).map(([groupName, groupNode]) => (
+        <TagTreeNode
+          name={groupName}
+          node={groupNode}
+          slugPath={toSlug(groupName)}
+          posts={posts}
+          tagCount={tagCount}
+        />
+      ))}
+    </div>
+
+    {orphanTags.length > 0 && (
+      <section class="orphan-section">
+        <h2>{t('tags.orphanTitle')}</h2>
+        <p class="orphan-hint">{t('tags.orphanHint')}</p>
+        <div class="orphan-chips">
+          {orphanTags.map(tag => (
+            <a class="orphan-chip" href={`/tags/${toSlug(tag)}/`}>
+              {tag}
+              <span class="chip-count">({tagCount.get(tag) ?? 0})</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+      .tags-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      /* ── Tree ──（節點自身的樣式都在 TagTreeNode.astro） */
+      .tag-tree {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      /* ── 未分類（孤兒 tag 收件匣）──
+         刻意與上方結構樹的精緻感對比：虛線、灰階、無填色，
+         看起來「未完成」，提醒作者把它們收進樹裡。 */
+      .orphan-section {
+        margin-top: 2.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px dashed rgb(var(--gray) / 0.5);
+      }
+      .orphan-section h2 {
+        font-size: 1.05rem;
+        margin: 0 0 0.2rem;
+        color: rgb(var(--gray-dark));
+      }
+      .orphan-hint {
+        font-size: 0.8rem;
+        color: rgb(var(--gray));
+        margin: 0 0 0.9rem;
+      }
+      .orphan-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .orphan-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        background: transparent;
+        border: 1.5px dashed rgb(var(--gray) / 0.6);
+        color: rgb(var(--gray-dark));
+        font-size: 0.82rem;
+        text-decoration: none;
+        transition: border-color 0.15s, color 0.15s, background 0.15s;
+      }
+      .orphan-chip:hover {
+        border-color: var(--accent);
+        color: var(--accent-dark);
+        background: var(--accent-light);
+      }
+      .orphan-chip .chip-count {
+        font-size: 0.72rem;
+        color: rgb(var(--gray));
+      }
+    </style>
+
+    <script>
+      import { navigate } from 'astro:transitions/client';
+
+      const DURATION = 260;
+      const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function setupTagToggle() {
+        if (reduceMotion) return; // 尊重使用者的減少動態偏好，維持原生瞬開瞬合
+        document.querySelectorAll<HTMLDetailsElement>('.tag-tree details').forEach(details => {
+          const summary = details.querySelector<HTMLElement>(':scope > summary');
+          const body = details.querySelector<HTMLElement>(':scope > .detail-body');
+          if (!summary || !body || details.dataset.animBound) return;
+          details.dataset.animBound = 'true';
+
+          let animation: Animation | null = null;
+
+          // 清掉所有動畫殘留的 inline 樣式，量測 / 收尾時還原成 CSS 原值
+          const clearInline = () => {
+            body.style.height = '';
+            body.style.paddingTop = '';
+            body.style.paddingBottom = '';
+            body.style.overflow = '';
+          };
+
+          summary.addEventListener('click', e => {
+            e.preventDefault(); // 一律自行控制，擋掉原生 details 的瞬間 toggle
+            // 「查看全部」：用 ClientRouter 程式化導頁，才有換頁動畫
+            // （原生 onclick stopPropagation 會擋掉 ClientRouter 的 document 層攔截 → 退回 MPA）
+            const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('.group-link');
+            if (link) { navigate(link.href); return; }
+            animation?.cancel();
+            clearInline(); // 還原成 CSS 原值，下面量測才會準
+            body.style.overflow = 'hidden';
+
+            // border-box 下 height:0 仍會被 padding 撐住（縮不到 0），所以連同上下
+            // padding 一起補間，盒子才能真正收到 0，避免最後一幀殘留一塊 padding 高度
+            const cs = getComputedStyle(body);
+            const padTop = cs.paddingTop;
+            const padBottom = cs.paddingBottom;
+
+            if (details.open) {
+              // 收合：先播動畫，結束後才關閉 details
+              const start = body.offsetHeight;
+              details.classList.add('is-closing');
+              // fill:'forwards' 讓最後一幀停在收合態，否則動畫一結束會先彈回完整高度一格
+              animation = body.animate(
+                [
+                  { height: start + 'px', paddingTop: padTop, paddingBottom: padBottom, opacity: 1 },
+                  { height: '0px', paddingTop: '0px', paddingBottom: '0px', opacity: 0 },
+                ],
+                { duration: DURATION, easing: EASING, fill: 'forwards' }
+              );
+              animation.onfinish = () => {
+                details.open = false; // 設 false 後內容由原生 display:none 隱藏，forwards 殘留無害
+                details.classList.remove('is-closing');
+                body.style.overflow = '';
+              };
+            } else {
+              // 展開：先開 details 量測完整高度
+              details.open = true;
+              const end = body.offsetHeight;
+              // 同步把起點（高度 + padding）釘在 0，瀏覽器才不會先用完整高度畫一格
+              body.style.height = '0px';
+              body.style.paddingTop = '0px';
+              body.style.paddingBottom = '0px';
+              animation = body.animate(
+                [
+                  { height: '0px', paddingTop: '0px', paddingBottom: '0px', opacity: 0 },
+                  { height: end + 'px', paddingTop: padTop, paddingBottom: padBottom, opacity: 1 },
+                ],
+                { duration: DURATION, easing: EASING }
+              );
+              animation.onfinish = clearInline;
+            }
+          });
+        });
+      }
+
+      document.addEventListener('astro:page-load', setupTagToggle);
+    </script>
+

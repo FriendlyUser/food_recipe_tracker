@@ -1,0 +1,60 @@
+---
+import { useTranslations } from '../i18n/utils';
+import { SOCIAL_LINKS, COPYRIGHT_NAME, CONTENT_LICENSE } from '../consts';
+import { socialIconPaths, FALLBACK_ICON } from '../lib/social-icons';
+const t = useTranslations();
+const today = new Date();
+---
+
+<footer>
+	{t('footer.copyright', { year: today.getFullYear(), author: COPYRIGHT_NAME, license: CONTENT_LICENSE })}
+	<div class="social-links">
+		{
+			SOCIAL_LINKS.map(({ icon, label, href }) => (
+				<a href={href} target="_blank" rel="me noopener">
+					<span class="sr-only">{label}</span>
+					<svg viewBox="0 0 16 16" aria-hidden="true" width="32" height="32">
+						<path fill="currentColor" d={socialIconPaths[icon] ?? socialIconPaths[FALLBACK_ICON]} />
+					</svg>
+				</a>
+			))
+		}
+		<a href="/rss.xml" target="_blank">
+			<span class="sr-only">{t('footer.rssLabel')}</span>
+			<svg viewBox="0 0 16 16" aria-hidden="true" width="32" height="32">
+				<path fill="currentColor" d={socialIconPaths.rss} />
+			</svg>
+		</a>
+	</div>
+</footer>
+<style>
+	footer {
+		padding: 2em 1em 1.2em 1em;
+		background: linear-gradient(var(--gray-gradient)) no-repeat;
+		color: rgb(var(--gray));
+		text-align: center;
+	}
+	.social-links {
+		display: flex;
+		justify-content: center;
+		gap: 1em;
+		margin-top: 1em;
+	}
+	.social-links a {
+		text-decoration: none;
+		color: rgb(var(--gray));
+		transition: color 0.2s ease, transform 0.2s ease;
+	}
+	.social-links a:hover {
+		color: var(--accent);
+		transform: translateY(-2px);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.social-links a {
+			transition: color 0.2s ease;
+		}
+		.social-links a:hover {
+			transform: none;
+		}
+	}
+</style>

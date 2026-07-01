@@ -1,0 +1,621 @@
+---
+import { SITE_TITLE } from '../consts';
+import HeaderLink from './HeaderLink.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { useTranslations } from '../i18n/utils';
+const t = useTranslations();
+---
+
+<header transition:persist transition:animate="none">
+	<nav>
+		<h2><a href="/">{SITE_TITLE}</a></h2>
+		<div class="internal-links" id="nav-menu">
+			<HeaderLink href="/blog">{t('nav.blog')}</HeaderLink>
+			<HeaderLink href="/tags">{t('nav.tags')}</HeaderLink>
+			<HeaderLink href="/series">{t('nav.series')}</HeaderLink>
+			<HeaderLink href="/blogroll">{t('nav.blogroll')}</HeaderLink>
+			<HeaderLink href="/about">{t('nav.about')}</HeaderLink>
+			<span class="nav-indicator" aria-hidden="true"></span>
+		</div>
+		<div class="social-links">
+			<button class="search-btn" id="search-btn" aria-label={t('search.label')} title={`${t('search.label')} (/)`}>
+				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" aria-hidden="true">
+					<circle cx="8.5" cy="8.5" r="5.5"/>
+					<line x1="13" y1="13" x2="18" y2="18"/>
+				</svg>
+			</button>
+			 <ThemeToggle />
+			<button class="menu-toggle" id="menu-toggle" aria-label={t('nav.menu')} aria-expanded="false" aria-controls="nav-menu">
+				<span class="hamburger" aria-hidden="true"></span>
+			</button>
+		</div>
+	</nav>
+</header>
+
+<!-- 全站搜索 Overlay -->
+<div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label={t('search.label')} transition:persist>
+	<div class="search-backdrop" id="search-backdrop"></div>
+	<div class="search-modal">
+		<div id="pagefind-search"></div>
+	</div>
+</div>
+
+<style>
+	header {
+		margin: 0;
+    	padding: 0 1em;
+    	background: var(--header-bg);
+    	backdrop-filter: var(--header-backdrop);
+    	border-bottom: 1px solid var(--header-border);
+    	box-shadow: 0 2px 8px rgba(var(--black), 5%);
+    	position: sticky;
+    	top: 0;
+    	z-index: 100;
+	}
+	h2 {
+		margin: 0;
+		font-size: 1em;
+	}
+
+	h2 a,
+	h2 a.active {
+		text-decoration: none;
+		color: rgb(var(--black));
+		transition: color 0.18s ease;
+	}
+	h2 a:hover {
+		color: var(--accent);
+	}
+	nav {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		position: relative;
+	}
+	.internal-links {
+		position: relative;
+	}
+	.internal-links a {
+		padding: 1em 0.5em;
+    	color: rgb(var(--black));
+    	text-decoration: none;
+		transition: color 0.18s ease;
+	}
+	.internal-links a:hover {
+		color: var(--accent);
+	}
+	.internal-links a.active {
+		text-decoration: none;
+	}
+	.nav-indicator {
+		position: absolute;
+		bottom: 0;
+		height: 4px;
+		border-radius: 2px 2px 0 0;
+		background: var(--accent);
+		pointer-events: none;
+		width: 0;
+		opacity: 0;
+	}
+	.social-links {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.social-links a {
+		display: flex;
+		align-items: center;
+		color: rgb(var(--black));
+		padding: 0.4rem;
+		border-radius: 6px;
+		transition: opacity 0.2s;
+	}
+	.social-links a:hover {
+    opacity: 0.7;
+}
+
+	/* ── 漢堡鈕（只在手機顯示）── */
+	.menu-toggle {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: rgb(var(--black));
+		display: none;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		padding: 0;
+		border-radius: 6px;
+		transition: opacity 0.2s;
+	}
+	.menu-toggle:hover {
+		opacity: 0.7;
+	}
+	.hamburger,
+	.hamburger::before,
+	.hamburger::after {
+		display: block;
+		width: 20px;
+		height: 2px;
+		background: currentColor;
+		border-radius: 2px;
+		transition: transform 0.25s ease, background 0.2s ease;
+	}
+	.hamburger {
+		position: relative;
+	}
+	.hamburger::before,
+	.hamburger::after {
+		content: '';
+		position: absolute;
+		left: 0;
+	}
+	.hamburger::before { top: -6px; }
+	.hamburger::after  { top: 6px; }
+	/* 展開 → 叉 */
+	.menu-toggle[aria-expanded="true"] .hamburger {
+		background: transparent;
+	}
+	.menu-toggle[aria-expanded="true"] .hamburger::before {
+		transform: translateY(6px) rotate(45deg);
+	}
+	.menu-toggle[aria-expanded="true"] .hamburger::after {
+		transform: translateY(-6px) rotate(-45deg);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.hamburger,
+		.hamburger::before,
+		.hamburger::after {
+			transition: none;
+		}
+	}
+
+	@media (max-width: 720px) {
+		/* 手機：nav 連結收進漢堡下拉面板；搜索／主題維持外露 */
+		.menu-toggle {
+			display: flex;
+		}
+		.nav-indicator {
+			display: none;
+		}
+		.internal-links {
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			display: flex;
+			flex-direction: column;
+			background: var(--bg);
+			border-bottom: 1px solid var(--header-border);
+			box-shadow: 0 8px 16px rgba(var(--black), 8%);
+			padding: 0.4rem 1em 0.6rem;
+			/* 收合：常駐 DOM，用 visibility+opacity+transform 開合（不能 transition display） */
+			visibility: hidden;
+			opacity: 0;
+			transform: translateY(-8px);
+			transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0.22s;
+		}
+		.internal-links.open {
+			visibility: visible;
+			opacity: 1;
+			transform: translateY(0);
+			transition: opacity 0.22s ease, transform 0.22s ease;
+		}
+		.internal-links a {
+			padding: 0.7em 0.5em;
+		}
+	}
+	@media (max-width: 720px) and (prefers-reduced-motion: reduce) {
+		.internal-links {
+			transform: none;
+			transition: visibility 0s linear 0.22s;
+		}
+		.internal-links.open {
+			transform: none;
+			transition: none;
+		}
+	}
+
+/* ── 搜索按鈕 ── */
+.search-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: rgb(var(--black));
+	display: flex;
+	align-items: center;
+	padding: 0.4rem;
+	border-radius: 6px;
+	transition: opacity 0.2s;
+	line-height: 0;
+}
+.search-btn:hover {
+	opacity: 0.7;
+}
+
+/* ── 搜索 Overlay ── */
+.search-overlay {
+	display: flex;
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 5rem 1rem 1rem;
+	/* 隱藏時不可互動；關閉時延後到子元素淡出後才真正隱藏 */
+	visibility: hidden;
+	transition: visibility 0s linear 0.25s;
+}
+.search-overlay.open {
+	visibility: visible;
+	transition: visibility 0s;
+}
+.search-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.55);
+	opacity: 0;
+	transition: opacity 0.25s ease;
+}
+.search-overlay.open .search-backdrop {
+	opacity: 1;
+}
+.search-modal {
+	position: relative;
+	width: 100%;
+	max-width: 640px;
+	background: var(--bg);
+	border-radius: 14px;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+	overflow: hidden;
+	max-height: calc(100vh - 6rem);
+	display: flex;
+	flex-direction: column;
+	opacity: 0;
+	transform: translateY(-12px) scale(0.98);
+	transform-origin: top center;
+	transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.search-overlay.open .search-modal {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+	.search-modal,
+	.search-overlay.open .search-modal {
+		transform: none;
+		transition: opacity 0.2s ease;
+	}
+}
+/* Pagefind UI 容器 */
+#pagefind-search {
+	padding: 0.75rem;
+	overflow-y: auto;
+	flex: 1;
+}
+</style>
+
+<style is:global>
+	/* Pagefind UI 主題覆蓋 */
+	:root {
+		--pagefind-ui-scale: 0.9;
+		--pagefind-ui-primary: var(--accent);
+		--pagefind-ui-text: rgb(var(--black));
+		--pagefind-ui-background: var(--bg);
+		--pagefind-ui-border: rgb(var(--gray-light));
+		--pagefind-ui-tag: rgb(var(--gray-light));
+		--pagefind-ui-border-width: 1px;
+		--pagefind-ui-border-radius: 8px;
+		--pagefind-ui-font: inherit;
+	}
+
+	/* Pagefind 自己的 stylesheet 在 :root 宣告深色模式覆蓋，比上方 :root 更晚載入因此優先
+	   用更高特異性的選擇器重新綁定到我們的主題 CSS 變數，確保深淺模式都正確 */
+	.search-modal {
+		--pagefind-ui-primary: var(--accent);
+		--pagefind-ui-text: rgb(var(--black));
+		--pagefind-ui-background: var(--bg);
+		--pagefind-ui-border: rgb(var(--gray-light));
+		--pagefind-ui-tag: rgb(var(--gray-light));
+	}
+
+	/* 搜尋結果高亮：ID 選擇器確保蓋過 Pagefind 自己的 mark 樣式 */
+	#pagefind-search mark {
+		background: rgba(251, 191, 36, 0.45);
+		color: inherit;
+		border-radius: 2px;
+	}
+	:root.dark #pagefind-search mark {
+		background: rgba(251, 191, 36, 0.40);
+	}
+
+	/* ── 搜尋結果 / 過濾器動畫 ── */
+	/* 結果區塊整體柔和淡入（含「找到 n 個」訊息與列表，不逐項） */
+	#pagefind-search .pagefind-ui__results-area {
+		animation: pf-fade-in 0.25s ease both;
+	}
+	@keyframes pf-fade-in {
+		from { opacity: 0; transform: translateY(6px); }
+		to   { opacity: 1; transform: translateY(0); }
+	}
+	/* 過濾器展開：內容柔和淡入下滑 */
+	#pagefind-search .pagefind-ui__filter-block[open] .pagefind-ui__filter-group {
+		animation: pf-filter-in 0.25s ease both;
+	}
+	@keyframes pf-filter-in {
+		from { opacity: 0; transform: translateY(-4px); }
+		to   { opacity: 1; transform: translateY(0); }
+	}
+	/* 過濾器收合：JS 攔截原生即時關閉，播完此動畫才真正設 open=false。
+	   選擇器需帶 [open] 脈絡，特異性才壓得過上面的 pf-filter-in 規則。 */
+	#pagefind-search .pagefind-ui__filter-block[open] .pagefind-ui__filter-group.pf-closing {
+		animation: pf-filter-out 0.25s ease both;
+	}
+	@keyframes pf-filter-out {
+		from { opacity: 1; transform: translateY(0); }
+		to   { opacity: 0; transform: translateY(-4px); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		#pagefind-search .pagefind-ui__results-area,
+		#pagefind-search .pagefind-ui__filter-block[open] .pagefind-ui__filter-group,
+		#pagefind-search .pagefind-ui__filter-block[open] .pagefind-ui__filter-group.pf-closing {
+			animation: none;
+		}
+	}
+</style>
+
+<script>
+	import { useTranslations } from '../i18n/utils';
+	import { isNavActive } from '../lib/nav';
+	const t = useTranslations();
+
+	// ── Search ──
+	let pagefindReady = false;
+
+	// Pagefind 樣式是執行時插進 <head> 的；ClientRouter 換頁會抽換 <head>，
+	// 動態插入的 <link> 會被移除，導致搜尋結果樣式跑掉。用此函式確保樣式存在。
+	function ensurePagefindCss() {
+		if (document.querySelector('link[data-pagefind-css]')) return;
+		const link = document.createElement('link');
+		link.rel = 'stylesheet';
+		link.href = '/pagefind/pagefind-ui.css';
+		link.setAttribute('data-pagefind-css', '');
+		document.head.appendChild(link);
+	}
+
+	async function loadPagefind() {
+		if (pagefindReady) return;
+		pagefindReady = true;
+
+		if (import.meta.env.DEV) {
+			const container = document.getElementById('pagefind-search');
+			if (container) {
+				container.innerHTML = `<p style="padding:1.25rem;color:rgb(var(--gray));font-size:0.88rem;text-align:center;">${t('search.devNotice')}</p>`;
+			}
+			return;
+		}
+
+		ensurePagefindCss();
+
+		const script = document.createElement('script');
+		script.src = '/pagefind/pagefind-ui.js';
+		script.onload = () => {
+			// @ts-ignore
+			new PagefindUI({
+				element: '#pagefind-search',
+				showImages: false,
+				showSubResults: true,
+				translations: {
+					placeholder: t('search.placeholder'),
+					zero_results: t('search.zeroResults'),
+					many_results: t('search.manyResults'),
+					one_result: t('search.oneResult'),
+					load_more: t('search.loadMore'),
+					searching: t('search.searching'),
+				},
+			});
+			setTimeout(() => {
+				document.querySelector<HTMLInputElement>('#pagefind-search input')?.focus();
+			}, 50);
+		};
+		document.head.appendChild(script);
+	}
+
+	function openSearch() {
+		document.getElementById('search-overlay')?.classList.add('open');
+		document.body.style.overflow = 'hidden';
+		loadPagefind().then(() => {
+			if (pagefindReady) {
+				setTimeout(() => {
+					document.querySelector<HTMLInputElement>('#pagefind-search input')?.focus();
+				}, 50);
+			}
+		});
+	}
+
+	function closeSearch() {
+		document.getElementById('search-overlay')?.classList.remove('open');
+		document.body.style.overflow = '';
+	}
+
+	// ── Nav indicator ──
+	type State = { left: number; width: number };
+	let lastState: State | null = null;
+	let isFirstLoad = true;
+	let phase2Timer: number | null = null;
+
+	function getActiveState(): State | null {
+		const container = document.querySelector<HTMLElement>('.internal-links');
+		const active = document.querySelector<HTMLElement>('.internal-links a.active');
+		if (!container || !active) return null;
+		const cr = container.getBoundingClientRect();
+		const lr = active.getBoundingClientRect();
+		return { left: lr.left - cr.left, width: lr.width };
+	}
+
+	function setInstant(el: HTMLElement, s: State | null) {
+		el.style.transition = 'none';
+		if (s) {
+			el.style.left    = s.left + 'px';
+			el.style.width   = s.width + 'px';
+			el.style.opacity = '1';
+		} else {
+			el.style.width   = '0px';
+			el.style.opacity = '0';
+		}
+	}
+
+	// Phase 1: leading edge stretches to destination
+	// Phase 2: trailing edge snaps with spring curve
+	function animateStretch(el: HTMLElement, from: State, to: State) {
+		if (phase2Timer !== null) { clearTimeout(phase2Timer); phase2Timer = null; }
+		const P1 = 180, P2 = 160;
+		const right = to.left > from.left;
+		const mid: State = right
+			? { left: from.left,  width: (to.left + to.width) - from.left }
+			: { left: to.left,    width: (from.left + from.width) - to.left };
+
+		el.style.transition = `left ${P1}ms ease-out, width ${P1}ms ease-out`;
+		el.style.left  = mid.left + 'px';
+		el.style.width = mid.width + 'px';
+
+		phase2Timer = window.setTimeout(() => {
+			phase2Timer = null;
+			el.style.transition = `left ${P2}ms cubic-bezier(0.34,1.56,0.64,1), width ${P2}ms cubic-bezier(0.34,1.56,0.64,1)`;
+			el.style.left  = to.left + 'px';
+			el.style.width = to.width + 'px';
+		}, P1);
+	}
+
+	function animateShrink(el: HTMLElement, from: State) {
+		const center = from.left + from.width / 2;
+		el.style.transition = 'left 0.2s ease-in, width 0.2s ease-in, opacity 0.18s ease-in';
+		el.style.left    = center + 'px';
+		el.style.width   = '0px';
+		el.style.opacity = '0';
+	}
+
+	function animateGrow(el: HTMLElement, to: State) {
+		el.style.transition = 'none';
+		el.style.left    = (to.left + to.width / 2) + 'px';
+		el.style.width   = '0px';
+		el.style.opacity = '0';
+		// double rAF ensures the browser paints the start state before transitioning
+		requestAnimationFrame(() => requestAnimationFrame(() => {
+			el.style.transition = `left 0.28s cubic-bezier(0.34,1.56,0.64,1), width 0.32s cubic-bezier(0.34,1.56,0.64,1), opacity 0.15s ease-out`;
+			el.style.left    = to.left + 'px';
+			el.style.width   = to.width + 'px';
+			el.style.opacity = '1';
+		}));
+	}
+
+	// ── Event listeners ──
+	// Header persists across navigations — bind once, listeners survive page swaps
+	document.getElementById('search-btn')?.addEventListener('click', openSearch);
+	document.getElementById('search-backdrop')?.addEventListener('click', closeSearch);
+
+	// ── Mobile nav menu（漢堡）──
+	// Header 持久化：聽眾綁一次即可跨頁存活（同 search-btn）
+	const menuToggle = document.getElementById('menu-toggle');
+	const navMenu = document.getElementById('nav-menu');
+
+	function closeMenu() {
+		navMenu?.classList.remove('open');
+		menuToggle?.setAttribute('aria-expanded', 'false');
+	}
+	function toggleMenu() {
+		const willOpen = !navMenu?.classList.contains('open');
+		navMenu?.classList.toggle('open', willOpen);
+		menuToggle?.setAttribute('aria-expanded', String(willOpen));
+	}
+
+	menuToggle?.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+	// 點選單內連結即關閉（點目前頁的連結不會觸發換頁，仍要收起）
+	navMenu?.addEventListener('click', (e) => {
+		if ((e.target as HTMLElement).closest('a')) closeMenu();
+	});
+	// 點面板外關閉
+	document.addEventListener('click', (e) => {
+		if (!navMenu?.classList.contains('open')) return;
+		const target = e.target as Node;
+		if (navMenu.contains(target) || menuToggle?.contains(target)) return;
+		closeMenu();
+	});
+
+	// 過濾器收合動畫：原生 <details> 一移除 open 內容就立刻消失，無法用 CSS 收合。
+	// 委派綁在持久的 #pagefind-search 上（不受 Pagefind 重繪影響）：攔截關閉那一下，
+	// 播完 pf-filter-out 再真正關閉。reduced-motion 時直接關，避免動畫停用導致卡開。
+	document.getElementById('pagefind-search')?.addEventListener('click', (e) => {
+		const summary = (e.target as HTMLElement).closest('.pagefind-ui__filter-name');
+		if (!summary) return;
+		const details = summary.closest('.pagefind-ui__filter-block') as HTMLDetailsElement | null;
+		if (!details || !details.open) return; // 展開動作交給原生 + CSS
+
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const group = details.querySelector('.pagefind-ui__filter-group') as HTMLElement | null;
+		if (reduceMotion || !group || group.classList.contains('pf-closing')) return;
+
+		e.preventDefault();
+		group.classList.add('pf-closing');
+		window.setTimeout(() => {
+			group.classList.remove('pf-closing');
+			details.open = false;
+		}, 250);
+	});
+
+	document.addEventListener('astro:page-load', () => {
+		// Set indicator on initial page load only (SPA nav handled by after-swap)
+		if (!isFirstLoad) return;
+		isFirstLoad = false;
+		const el = document.querySelector<HTMLElement>('.nav-indicator');
+		if (!el) return;
+		const state = getActiveState();
+		setInstant(el, state);
+		lastState = state;
+	});
+
+	document.addEventListener('astro:before-swap', () => {
+		closeSearch();
+		closeMenu();
+		if (phase2Timer !== null) { clearTimeout(phase2Timer); phase2Timer = null; }
+	});
+
+	document.addEventListener('astro:after-swap', () => {
+		// Pagefind 樣式表是執行時插入 <head> 的，換頁時被一併移除 → 補回，避免搜尋結果樣式跑掉
+		if (pagefindReady && !import.meta.env.DEV) ensurePagefindCss();
+
+		// Header is persisted — manually sync active link class with new URL
+		const path = window.location.pathname;
+		document.querySelectorAll<HTMLAnchorElement>('.internal-links a').forEach(a => {
+			a.classList.toggle('active', isNavActive(a.getAttribute('href') ?? '', path));
+		});
+
+		const el = document.querySelector<HTMLElement>('.nav-indicator');
+		if (!el) return;
+
+		const prev = lastState;
+		const next = getActiveState();
+		lastState = next;
+
+		if (!next) {
+			if (prev) { setInstant(el, prev); requestAnimationFrame(() => animateShrink(el, prev)); }
+			else       { setInstant(el, null); }
+			return;
+		}
+		if (!prev) {
+			animateGrow(el, next);
+			return;
+		}
+		setInstant(el, prev);
+		requestAnimationFrame(() => animateStretch(el, prev, next));
+	});
+
+	document.addEventListener('keydown', e => {
+		if (e.key === 'Escape') { closeSearch(); closeMenu(); return; }
+		if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+			e.preventDefault();
+			openSearch();
+		}
+	});
+</script>

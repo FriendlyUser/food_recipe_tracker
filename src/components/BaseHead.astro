@@ -1,0 +1,149 @@
+---
+// Import the global.css file here so that it is included on
+// all pages through the use of the <BaseHead /> component.
+import "../styles/global.css";
+import type { ImageMetadata } from "astro";
+import FallbackImage from "../assets/hero-image-holder.jpg";
+import { SITE_TITLE, SITE_AUTHOR } from "../consts";
+import { siteLocale } from "../i18n/ui";
+import { ClientRouter } from "astro:transitions";
+
+interface Props {
+    title: string;
+    description: string;
+    image?: ImageMetadata;
+    jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+    ogType?: "website" | "article"; // 文章頁傳 article，其餘維持 website
+}
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+const {
+    title,
+    description,
+    image = FallbackImage,
+    jsonLd,
+    ogType = "website",
+} = Astro.props;
+---
+
+<!-- charset 必須落在 HTML 前 1024 bytes 內，故搶在所有 script（含 inline 主題判斷、
+     ClientRouter）之前輸出，否則前面的腳本會把它擠出視窗、瀏覽器改用預設編碼。 -->
+<meta charset="utf-8" />
+<script is:inline>
+    // 主題 class 的唯一來源：<html> 上永遠有 .dark 或 .light，
+    // 「跟隨系統」也在這裡即時解析成其中之一。如此 CSS 只需維護
+    // :root.dark 一份深色 token，不必再同步 @media 重複區塊。
+    // （代價：關閉 JS 的使用者固定淺色。）
+    const theme = localStorage.getItem("theme") ?? "system";
+    const dark =
+        theme === "dark" ||
+        (theme === "system" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.add(dark ? "dark" : "light");
+</script>
+<script>
+    // ClientRouter 換頁前把主題 class 寫入新 document，避免 View Transitions 截圖時閃爍
+    document.addEventListener("astro:before-swap", (ev) => {
+        const theme = localStorage.getItem("theme") ?? "system";
+        const dark =
+            theme === "dark" ||
+            (theme === "system" &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches);
+        const newDoc = (ev as unknown as { newDocument: Document }).newDocument;
+        newDoc.documentElement.classList.remove("dark", "light");
+        newDoc.documentElement.classList.add(dark ? "dark" : "light");
+    });
+</script>
+<ClientRouter />
+<!-- Global Metadata -->
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+<link
+    rel="alternate"
+    type="application/rss+xml"
+    title={SITE_TITLE}
+    href={new URL("rss.xml", Astro.site)}
+/>
+<meta name="generator" content={Astro.generator} />
+<meta name="author" content={SITE_AUTHOR} />
+
+<!-- 內文字型載入策略（分兩段）──
+     1) 首屏關鍵子集：preload 最常用漢字片（gf_119，24K，含「的是我文中…」），
+        並把 gf_118/gf_119 兩條 @font-face 直接 inline 進 head（Latin 交給 Nunito，
+        故不含 lgc）。
+        理由：@font-face 規則若只活在下面那份 media="print" 的 vf.css，
+        要等 onload 翻回 all（≈600ms）才生效，字型檔才被發現 → 換字尾巴拖到 ~2s。
+        inline 後這幾片在首次 layout 就被發現、即時開抓，把 FOUT 收進來；
+        且這段不吃 JS，關閉 JS 的訪客照樣拿到常用中文＋拉丁的真字型
+        （故毋須 noscript——Astro 會把 head 內 noscript 之後的同層 title/meta 吸進去而掉 SEO）。
+     2) 其餘 143 個非首屏（罕用字）子集：續走 media="print" 非阻塞，載完翻回 all。
+        所有 @font-face 皆 font-display:swap，先用後備字、載入後替換，無空白閃爍。 -->
+<link
+    rel="preload"
+    as="font"
+    type="font/woff2"
+    href="/fonts/chiron-go-round-tc-1.011/woff2/vf/t0/gf_119.woff2"
+    crossorigin
+/>
+<style is:inline>
+    /* 首屏關鍵子集 @font-face（與 vf.css 同名同 range，提早被發現用；絕對路徑） */
+    @font-face {
+        font-family: 'Chiron GoRound TC WS';
+        font-style: normal;
+        font-weight: 200 900;
+        font-display: swap;
+        src: url('/fonts/chiron-go-round-tc-1.011/woff2/vf/t0/gf_119.woff2') format('woff2-variations'), url('/fonts/chiron-go-round-tc-1.011/woff2/vf/t0/gf_119.woff2') format('woff2 supports variations');
+        unicode-range: U+203c, U+3001-3002, U+3113-3114, U+3118, U+311a-3129, U+4e00, U+4e0a-4e0b, U+4e0d, U+4e2d, U+4eba, U+4ee5, U+4f5c, U+500b, U+5165, U+5168, U+516c, U+51fa, U+5206, U+5230, U+52d5, U+53ef-53f0, U+570b, U+5728, U+5730, U+591a, U+5927, U+5b50, U+5bb6, U+5c0f, U+5fc3, U+6211, U+6587, U+65b0, U+65bc, U+65e5, U+662f, U+6642, U+6700, U+6703, U+6708-6709, U+672c, U+6b63, U+70b9-70ba, U+751f, U+7528, U+767c, U+7684, U+7db2, U+884c, U+958b, U+95dc, U+96fb, U+9801, U+ff0c, U+ff1a;
+    }
+    @font-face {
+        font-family: 'Chiron GoRound TC WS';
+        font-style: normal;
+        font-weight: 200 900;
+        font-display: swap;
+        src: url('/fonts/chiron-go-round-tc-1.011/woff2/vf/t0/gf_118.woff2') format('woff2-variations'), url('/fonts/chiron-go-round-tc-1.011/woff2/vf/t0/gf_118.woff2') format('woff2 supports variations');
+        unicode-range: U+300c-300d, U+4e09, U+4e3b, U+4e4b, U+4e5f, U+4e86, U+4e8b-4e8c, U+4eab, U+4ed6, U+4ee3, U+4ef6, U+4f1a, U+4f4d, U+4f60, U+4f7f, U+4f86, U+4fdd, U+4fe1, U+5011, U+50b3, U+5149, U+5167, U+5176, U+518d, U+5229, U+524d, U+529b, U+52a0, U+52d9, U+5316-5317, U+5340, U+539f, U+53ca-53cb, U+5408, U+540c-540d, U+544a, U+548c, U+54c1, U+54e1, U+5546, U+554f, U+55ae, U+56de, U+5716, U+5831, U+5834, U+5916, U+5929, U+5973, U+597d, U+5982, U+5b57, U+5b78, U+5b89, U+5b8c, U+5b9a, U+5ba2, U+5bb9, U+5be6, U+5c07-5c08, U+5c0d, U+5c31, U+5de5, U+5df2, U+5e02, U+5e38, U+5e73-5e74, U+5ea6, U+5f0f, U+5f71, U+5f8c, U+5f97, U+5feb, U+6027, U+60c5, U+60f3, U+610f, U+611b, U+611f, U+61c9, U+6210, U+6216, U+6240, U+624b, U+63a5, U+63a8, U+63d0, U+641c, U+6536, U+6578, U+6599, U+65b9, U+660e, U+661f, U+662d, U+66f4, U+670d, U+671f, U+6771, U+679c, U+682a, U+683c, U+689d, U+696d, U+6a02, U+6a5f, U+6b0a, U+6b21, U+6b3e, U+6b64, U+6c23, U+6c34, U+6c92, U+6cbb, U+6cd5, U+6d3b, U+7063, U+7121, U+71b1, U+7247-7248, U+7269, U+7279, U+73fe, U+7406, U+7522, U+7576, U+767b, U+76ee, U+76f8, U+770b, U+771f, U+77e5, U+793e, U+7a0b, U+7acb, U+7ad9, U+7b2c, U+7b49, U+7cbe, U+7d50, U+7d61, U+7d93, U+7dda, U+7f8e, U+8005, U+806f, U+80fd, U+81ea, U+8207, U+8272, U+865f, U+8868, U+8981, U+898b, U+8996, U+8a00, U+8a08, U+8a0a, U+8a18, U+8a2d, U+8a71, U+8aaa, U+8acb, U+8cbb, U+8cc7, U+8d77, U+8d85, U+8def, U+8eab, U+8eca, U+8f49, U+9019-901a, U+9023, U+9032, U+904a-904b, U+904e, U+9053, U+9078, U+9084, U+90e8, U+90fd, U+91cd, U+91d1, U+9577, U+9580, U+9593, U+9762, U+982d, U+984c, U+985e, U+9996, U+9ad4, U+9ad8, U+9ede, U+ff01, U+ff08-ff09, U+ff1f;
+    }
+</style>
+<link
+    rel="stylesheet"
+    href="/fonts/chiron-go-round-tc-1.011/css/vf.css"
+    media="print"
+    onload="this.media='all'"
+/>
+
+<!-- Canonical URL -->
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Primary Meta Tags -->
+<title>{title}</title>
+<meta name="title" content={title} />
+<meta name="description" content={description} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content={ogType} />
+<meta property="og:locale" content={siteLocale.og} />
+<meta property="og:url" content={Astro.url} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={new URL(image.src, Astro.url)} />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={Astro.url} />
+<meta property="twitter:title" content={title} />
+<meta property="twitter:description" content={description} />
+<meta property="twitter:image" content={new URL(image.src, Astro.url)} />
+
+<!-- JSON-LD 結構化資料（schema.org）：跳脫 `<` 避免字串內容提早關閉 script -->
+{
+    jsonLd && (
+        <script
+            type="application/ld+json"
+            set:html={JSON.stringify(jsonLd).replace(/</g, "\\u003c")}
+        />
+    )
+}

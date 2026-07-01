@@ -1,0 +1,66 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getSortedPosts } from '../../../lib/posts';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PostList from '../../../components/PostList.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { SITE_TITLE, POSTS_PER_PAGE } from '../../../consts';
+import { useTranslations } from '../../../i18n/utils';
+const t = useTranslations();
+
+// 第 1 頁在 /blog/（index.astro），這裡只產生第 2 頁以後，避免內容重複
+export async function getStaticPaths() {
+	const allPosts = await getSortedPosts();
+	const lastPage = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
+
+	const paths = [];
+	for (let p = 2; p <= lastPage; p++) {
+		paths.push({
+			params: { page: String(p) },
+			props: {
+				posts: allPosts.slice((p - 1) * POSTS_PER_PAGE, p * POSTS_PER_PAGE),
+				currentPage: p,
+				lastPage,
+				total: allPosts.length,
+			},
+		});
+	}
+	return paths;
+}
+
+interface Props {
+	posts: CollectionEntry<'blog'>[];
+	currentPage: number;
+	lastPage: number;
+	total: number;
+}
+
+const { posts, currentPage, lastPage, total } = Astro.props;
+---
+
+<BaseLayout title={`${t('blog.pageTitle', { n: currentPage })} — ${SITE_TITLE}`} description={t('blog.metaDescription')}>
+	<div class="page-header">
+		<h1>{t('blog.allPosts')}</h1>
+		<span class="post-count">{t('blog.pageInfo', { total, current: currentPage, last: lastPage })}</span>
+	</div>
+	<PostList posts={posts} />
+	<Pagination currentPage={currentPage} lastPage={lastPage} />
+</BaseLayout>
+
+<style>
+	/* ── 頁面標題 ── */
+	.page-header {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+	.page-header h1 {
+		font-size: 2rem;
+		margin: 0;
+	}
+	.post-count {
+		font-size: 0.9rem;
+		color: rgb(var(--gray));
+	}
+</style>

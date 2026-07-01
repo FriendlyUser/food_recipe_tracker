@@ -1,0 +1,11 @@
+# Cloudflare Workers static assets 的瀏覽器快取標頭。
+# 預設是 `public, max-age=0, must-revalidate`——每次導覽（含 View Transitions
+# 的 client-side 換頁）都對每個資源發條件式請求 revalidate，對「內容雜湊過、
+# 改動即換檔名」的資產純屬浪費。以下兩類可安全鎖一年 immutable：
+#   /_astro/*  Astro 產物（JS / CSS / 優化後的 webp），檔名帶內容 hash
+#   /fonts/*   字型 woff2 與其 vf.css，路徑穩定、內容不變（若改字型需改名或清快取）
+# 縮排為語法要求。驗證：部署後 curl -I 該類資源確認 Cache-Control 已翻轉。
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

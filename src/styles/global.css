@@ -1,0 +1,318 @@
+/*
+  The CSS in this style tag is based off of Bear Blog's default CSS.
+  https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
+  License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
+ */
+:root {
+	/* 淺色模式 - 水藍主題 */
+	--accent: #5BB8D4;        /* 水藍，主色調 */
+	--accent-dark: #2E86A8;   /* 較深的水藍，hover用 */
+	--accent-light: #C5EDFF;  /* 淡水藍，背景點綴用 */
+	--tag-chip-fg: #1A6076;   /* tag chip 文字：淺底 #C5EDFF 上達 5.68:1（hover 改用 accent-fill 填色）*/
+	--tag-current-bg: #5BB8D4;/* 當前 tag chip：極性同頁面（淺＝亮底深字 8.25），避開 self-link :visited 染色 */
+	--tag-current-fg: #0f1219;
+	--accent-fill: #1F7191;   /* 填色 chip 專用底色：比 accent 深，白字可達 WCAG 4.5:1 */
+	--on-accent-fill: #fff;   /* 填色 chip 上的文字（淺色模式：白字鋪深青）*/
+
+	--pinned-badge-bg: #5BB8D4;  /* 置頂徽章：鋪在隨模式變色的底板上，跟頁面極性一致（淺色＝深字/亮底）*/
+	--pinned-badge-fg: #0f1219;
+
+	/* 置頂卡底板：頂端半透明（透出模糊 hero 圖）→ 極短距離淡出到純色 var(--bg)。
+	   這是淡出漸層的「起點色」（同頁面底色、低不透明）；文字一律落在純色段 */
+	--pinned-plate-fade: rgba(240, 249, 255, 0.15);
+
+	--black: 15, 18, 25;
+	--gray: 82, 98, 135;       /* muted 文字：調深至卡片底色上 ≥4.5:1（最差 post 卡 5.45）*/
+	--gray-light: 229, 233, 240;
+	--gray-dark: 34, 41, 57;
+
+	--bg: #f0f9ff;
+	--bg-gradient-start: #C5EDFF;  /* 淡水藍漸層 */
+	--text: rgb(34, 41, 57);
+
+	--box-shadow:
+		0 2px 6px rgba(var(--gray), 25%), 0 8px 24px rgba(var(--gray), 33%),
+		0 16px 32px rgba(var(--gray), 33%);
+
+	--header-bg: rgba(197, 237, 255, 0.35);
+	--header-border: rgba(255, 255, 255, 0.45);
+
+	--header-backdrop: blur(16px) saturate(180%) brightness(1.08);
+
+	/* ── Callout / Admonition ──
+	   -c = 邊框/圖示色（裝飾，並當底色 tint 來源）；-fg = 標題文字色（已量化 WCAG）。
+	   標題對淺底 tint(α10%) 皆 ≥5.7:1（註記在各行）。*/
+	--callout-tint: 10%;
+	--callout-note-c: #0969da;       --callout-note-fg: #0550ae;       /* 6.23:1 */
+	--callout-tip-c: #1a7f37;        --callout-tip-fg: #116329;        /* 6.10:1 */
+	--callout-important-c: #8250df;  --callout-important-fg: #5a32a3;  /* 7.14:1 */
+	--callout-warning-c: #9a6700;    --callout-warning-fg: #7a5200;    /* 5.70:1 */
+	--callout-caution-c: #cf222e;    --callout-caution-fg: #a40e26;    /* 6.33:1 */
+}
+/* 深色模式 token 的唯一來源。
+   JS（BaseHead 開頭 script / ThemeToggle）會把「跟隨系統」解析成
+   .dark 或 .light 永遠掛在 <html> 上，所以這裡不需要
+   @media (prefers-color-scheme) 的重複區塊。 */
+:root.dark {
+	--accent: #7DD3EA;
+	--accent-dark: #5BB8D4;
+	--accent-light: #1a3a4a;
+	--tag-chip-fg: #7DD3EA;   /* tag chip 文字：暗底 #1a3a4a 上達 7.08:1 */
+	--tag-current-bg: #1F7191;/* 當前 tag chip：極性同頁面（暗＝深底白字 5.48）*/
+	--tag-current-fg: #fff;
+	--accent-fill: #7DD3EA;   /* 暗色填色 chip：亮青底 */
+	--on-accent-fill: #0f1219;/* 暗色填色 chip 用深字（深字鋪亮青）*/
+
+	--pinned-badge-bg: #1F7191;  /* 暗色置頂徽章：深底白字，跟頁面極性一致（暗色＝淺字/深底）*/
+	--pinned-badge-fg: #fff;
+
+	--pinned-plate-fade: rgba(30, 58, 95, 0.30);
+
+	--black: 240, 240, 245;
+	--gray: 160, 175, 200;
+	--gray-light: 40, 50, 70;
+	--gray-dark: 220, 225, 235;
+
+	--bg: #1e3a5f;
+	--bg-gradient-start: #0d1b2a;
+	--text: rgb(220, 225, 235);
+
+	--header-bg: rgba(13, 27, 42, 0.45);
+	--header-border: rgba(255, 255, 255, 0.08);
+	--header-backdrop: blur(12px) brightness(0.9) saturate(150%);
+
+	/* ── Callout（暗底 #1e3a5f，tint α13%，標題文字皆 ≥4.88:1）── */
+	--callout-tint: 13%;
+	--callout-note-c: #4493f8;       --callout-note-fg: #79c0ff;       /* 4.92:1 */
+	--callout-tip-c: #3fb950;        --callout-tip-fg: #56d364;        /* 4.88:1 */
+	--callout-important-c: #ab7df8;  --callout-important-fg: #d2a8ff;  /* 4.96:1 */
+	--callout-warning-c: #d29922;    --callout-warning-fg: #e3b341;    /* 4.98:1 */
+	--callout-caution-c: #f85149;    --callout-caution-fg: #ff968f;    /* 5.00:1 */
+}
+@font-face {
+    font-family: 'Nunito';
+    src: url('/fonts/Nunito-VariableFont_wght.woff2') format('woff2-variations');
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Monaspace Radon';
+    src: url('/fonts/Monaspace Radon Var.woff2') format('woff2-variations');
+    font-weight: 100 900;
+    font-display: swap;
+}
+html {
+	background-color: var(--bg-gradient-start);
+	/* 錨點跳轉（TOC、標題 # 連結、瀏覽器 hash 導航）時，於捲動容器頂端預留
+	   sticky header 的高度＋些許間距，避免目標標題被蓋到 header 底下。
+	   5rem 沿用 BlogPost sticky TOC 既有的 header 清空偏移。 */
+	scroll-padding-top: 5rem;
+}
+body {
+	/* Nunito 擺第一：Latin/數字/常用標點由它接管（已在 ~29ms 載入），
+	   中文沒有的字才落到 Chiron 的 CJK 切片。如此不必載 Chiron 的 lgc(116KB)，
+	   也消掉英文「先 Nunito 後 lgc」的二次換字。罕用符號 Nunito 沒有時仍會
+	   回退到 Chiron lgc（按需、極少觸發）。 */
+	font-family: 'Nunito', 'Chiron GoRound TC WS', sans-serif;
+	margin: 0;
+	padding: 0;
+	text-align: left;
+	background: linear-gradient(var(--bg-gradient-start), var(--bg)) no-repeat;
+	background-size: 100% 1250px;
+	background-color: var(--bg);
+	color: var(--text);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	font-size: 20px;
+	line-height: 1.7;
+}
+main {
+	width: 720px;
+	max-width: calc(100% - 2em);
+	margin: auto;
+	padding: 3em 1em;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0 0 0.5rem 0;
+	color: rgb(var(--black));
+	line-height: 1.2;
+}
+h1 {
+	font-size: 3.052em;
+}
+h2 {
+	font-size: 2.441em;
+}
+h3 {
+	font-size: 1.953em;
+}
+h4 {
+	font-size: 1.563em;
+}
+h5 {
+	font-size: 1.25em;
+}
+strong,
+b {
+	font-weight: 700;
+}
+a {
+	color: var(--accent);
+}
+a:hover {
+	color: var(--accent);
+}
+p {
+	margin-bottom: 1em;
+}
+.prose p {
+	margin-bottom: 2em;
+}
+textarea {
+	width: 100%;
+	font-size: 16px;
+}
+input {
+	font-size: 16px;
+}
+table {
+	width: 100%;
+}
+img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 8px;
+}
+code {
+	padding: 2px 5px;
+	background-color: rgb(var(--gray-light));
+	border-radius: 2px;
+	overflow-wrap: anywhere;
+}
+pre {
+	padding: 1.5em;
+	border-radius: 8px;
+	overflow-x: auto;
+	max-width: 100%;
+}
+pre > code {
+	all: unset;
+	white-space: pre;
+}
+blockquote {
+	border-left: 4px solid var(--accent);
+	padding: 0 0 0 20px;
+	margin: 0;
+	font-size: 1.333em;
+}
+hr {
+	border: none;
+	border-top: 1px solid rgb(var(--gray-light));
+}
+@media (max-width: 720px) {
+	body {
+		font-size: 18px;
+	}
+	main {
+		padding: 1em;
+	}
+}
+code, pre, kbd {
+    font-family: 'Monaspace Radon', monospace;
+}
+
+/* ── 頁面切換動畫 ──
+   Header 用 transition:animate="none" 排除在 root 之外並停用自身動畫，永遠固定在頂部。
+   只有 root（main + footer + 背景）做淡出往下 / 淡入往上。 */
+@keyframes vt-main-out {
+	to { opacity: 0; transform: translateY(14px); }
+}
+@keyframes vt-main-in {
+	from { opacity: 0; transform: translateY(14px); }
+}
+/* 只在 Astro 換頁時套用（換頁時 <html> 會帶 data-astro-transition）。
+   主題切換是我們自己呼叫的 startViewTransition，不帶此屬性，因此不會吃到換頁滑動。 */
+:root[data-astro-transition]::view-transition-old(root) {
+	animation: vt-main-out 0.18s ease-in forwards;
+}
+:root[data-astro-transition]::view-transition-new(root) {
+	animation: vt-main-in 0.24s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+	}
+}
+
+/* ── 深淺色切換動畫 ──
+   點主題按鈕時臨時加上 .theme-switching：
+   - 把 header 的 view-transition-name 取消，讓它併回 root 快照一起被圓形覆蓋；
+   - 舊主題快照保持靜止，新主題快照以「從按鈕為圓心擴張的圓」覆蓋上去。
+   圓心 / 半徑由 ThemeToggle 的 JS 寫進 --theme-x / --theme-y / --theme-end-r。 */
+:root.theme-switching header {
+	view-transition-name: none !important;
+}
+:root.theme-switching::view-transition-old(root),
+:root.theme-switching::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+:root.theme-switching::view-transition-new(root) {
+	animation: theme-circle-in 0.45s ease-in-out forwards;
+}
+@keyframes theme-circle-in {
+	from { clip-path: circle(0 at var(--theme-x) var(--theme-y)); }
+	to   { clip-path: circle(var(--theme-end-r) at var(--theme-x) var(--theme-y)); }
+}
+@media (prefers-reduced-motion: reduce) {
+	:root.theme-switching::view-transition-new(root) {
+		animation: none;
+	}
+}
+
+/* 切換主題時把按鈕單獨拉成自己的 transition group（浮在圓形覆蓋之上不被裁切），
+   舊圖示淡出旋小、新圖示淡入旋正，做出圖案過渡。圓心就是按鈕中心，視覺一致。
+   reduced-motion 時不會加 .theme-switching，故此整段不會觸發。 */
+:root.theme-switching #theme-toggle {
+	view-transition-name: theme-icon;
+}
+::view-transition-group(theme-icon) {
+	z-index: 2147483647;
+}
+::view-transition-old(theme-icon) {
+	animation: theme-icon-out 0.4s ease both;
+}
+::view-transition-new(theme-icon) {
+	animation: theme-icon-in 0.4s ease both;
+}
+@keyframes theme-icon-out {
+	to { opacity: 0; transform: rotate(-120deg) scale(0.4); }
+}
+@keyframes theme-icon-in {
+	from { opacity: 0; transform: rotate(120deg) scale(0.4); }
+}
+
+.sr-only {
+	border: 0;
+	padding: 0;
+	margin: 0;
+	position: absolute !important;
+	height: 1px;
+	width: 1px;
+	overflow: hidden;
+	/* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+	clip: rect(1px 1px 1px 1px);
+	/* maybe deprecated but we need to support legacy browsers */
+	clip: rect(1px, 1px, 1px, 1px);
+	/* modern browsers, clip-path works inwards from each corner */
+	clip-path: inset(50%);
+	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
+	white-space: nowrap;
+}

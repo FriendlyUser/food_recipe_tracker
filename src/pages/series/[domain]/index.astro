@@ -1,0 +1,73 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SeriesCard from '../../../components/SeriesCard.astro';
+import { SITE_TITLE } from '../../../consts';
+import { seriesData } from '../../../data/series';
+import { useTranslations } from '../../../i18n/utils';
+const t = useTranslations();
+
+export function getStaticPaths() {
+  return Object.keys(seriesData).map((domainKey) => ({
+    params: { domain: domainKey },
+  }));
+}
+
+const { domain: domainKey } = Astro.params;
+const domain = seriesData[domainKey];
+
+const seriesList = Object.entries(domain.series).map(([key, series]) => ({
+  key,
+  title: series.title,
+  description: series.description,
+  heroImage: series.heroImage,
+  heroDarkness: series.heroDarkness,
+  partCount: series.parts.length,
+  chapterCount: series.parts.reduce((sum, p) => sum + p.chapters.length, 0),
+}));
+---
+
+<BaseLayout title={`${domain.title} — ${SITE_TITLE}`} description={t('series.domainMetaDescription', { title: domain.title })}>
+  <div class="series-page">
+    <p class="breadcrumb"><a href="/series/">{t('series.title')}</a> / {domain.title}</p>
+    <h1>{domain.title}</h1>
+    <div class="card-grid">
+      {seriesList.map(s => (
+        <SeriesCard
+          href={`/series/${domainKey}/${s.key}/`}
+          title={s.title}
+          description={s.description}
+          meta={[t('series.partCount', { n: s.partCount }), t('series.chapterCount', { n: s.chapterCount })]}
+          heroImage={s.heroImage}
+          heroDarkness={s.heroDarkness}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+      .series-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      .breadcrumb {
+        font-size: 0.88rem;
+        color: rgb(var(--gray));
+        margin-bottom: 1rem;
+      }
+      .breadcrumb a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .breadcrumb a:hover { text-decoration: underline; }
+      h1 { font-size: 2rem; margin: 0 0 2rem 0; }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+      @media (max-width: 600px) {
+        .card-grid { grid-template-columns: 1fr; }
+      }
+    </style>

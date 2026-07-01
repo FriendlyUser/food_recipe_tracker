@@ -1,0 +1,113 @@
+---
+import type { BlogrollLink } from '../data/blogroll';
+
+const { name, url, description, avatar } = Astro.props as BlogrollLink;
+
+// 沒指定頭像時，取名稱首字當字母圓章（Intl.Segmenter 可正確切出單一字位，
+// 中英文、emoji 都不會被切壞）。
+const initial =
+  [...new Intl.Segmenter().segment(name.trim())][0]?.segment ?? '?';
+---
+
+<a class="blogroll-card" href={url} target="_blank" rel="noopener noreferrer me">
+  {avatar
+    ? <img class="avatar" src={avatar} alt="" width="44" height="44" loading="lazy" />
+    : <span class="avatar avatar-fallback" aria-hidden="true">{initial}</span>
+  }
+  <div class="body">
+    <span class="name">{name}</span>
+    {description && <span class="desc">{description}</span>}
+  </div>
+  <svg class="ext" viewBox="0 0 24 24" width="16" height="16" fill="none"
+    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round" aria-hidden="true">
+    <path d="M7 17 17 7" />
+    <path d="M8 7h9v9" />
+  </svg>
+</a>
+
+<style>
+  .blogroll-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--gray-light), 0.7);
+    background: rgba(var(--gray-light), 0.35);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .blogroll-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow);
+    border-color: var(--accent);
+  }
+
+  .avatar {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+  }
+  .avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--on-accent-fill, #fff);
+    background: linear-gradient(135deg, var(--accent-fill), var(--accent-dark));
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .name {
+    font-weight: 600;
+    color: rgb(var(--black));
+    line-height: 1.3;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .blogroll-card:hover .name {
+    color: var(--accent-dark);
+  }
+  .desc {
+    font-size: 0.8rem;
+    color: rgb(var(--gray));
+    line-height: 1.4;
+    margin-top: 0.15rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ext {
+    flex-shrink: 0;
+    color: rgb(var(--gray));
+    opacity: 0;
+    transform: translate(-2px, 2px);
+    transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  }
+  .blogroll-card:hover .ext {
+    opacity: 1;
+    transform: translate(0, 0);
+    color: var(--accent);
+  }
+  /* 觸控裝置沒有 hover，常駐顯示外連箭頭 */
+  @media (hover: none) {
+    .ext { opacity: 1; transform: none; }
+  }
+</style>

@@ -1,0 +1,31 @@
+// {
+//   "compatibility_date": "2025-09-27",
+//   "compatibility_flags": [
+//     "global_fetch_strictly_public",
+//     "nodejs_compat"
+//   ],
+//   "name": "my-blog",
+//   "main": "dist/_worker.js/index.js",
+//   "assets": {
+//     "binding": "ASSETS",
+//     "directory": "dist"
+//   },
+//   "observability": {
+//     "enabled": true
+//   },
+//   "$schema": "node_modules/wrangler/config-schema.json"
+// }
+
+{
+  "name": "my-blog",
+  "compatibility_date": "2025-09-27",
+  "assets": {
+    "directory": "./dist",
+    // 未命中任何靜態資源時服務 dist/404.html（Astro 的 404.astro 產物）。
+    // 預設 "none" 只回 Workers 內建空白 404，故自訂 404 在 wrangler/線上不生效；
+    // astro dev 不讀此設定、自己渲染 404.astro，所以 pnpm dev 一直正常。
+    "not_found_handling": "404-page"
+  },
+  "workers_dev": false,
+  "preview_urls": true
+}

@@ -1,0 +1,48 @@
+Biluo (碧落) — Astro blog theme
+===============================
+
+This project is distributed under multiple licenses depending on the
+component. A summary follows.
+
+
+1. Theme source code — MIT License
+----------------------------------
+All source code in this repository (Astro components, layouts, styles,
+build configuration, scripts) is licensed under the MIT License. See the
+LICENSE file for the full text.
+
+
+2. Bundled fonts — SIL Open Font License 1.1
+--------------------------------------------
+The fonts shipped under public/fonts/ are licensed under the SIL Open
+Font License, Version 1.1, NOT under the MIT License above. Each font's
+full license and copyright notice travels with it:
+
+  * Chiron GoRound TC (昭源圜方)
+      Source:  https://chiron-fonts.github.io/
+               https://github.com/chiron-fonts/chiron-go-round-tc
+      License: public/fonts/chiron-go-round-tc-1.011/OFL.txt
+      Copyright 2024-2026 Tamcy; Copyright 2014-2025 Adobe;
+      Copyright 2016 The Nunito Sans Project Authors.
+
+  * Nunito
+      Source:  https://github.com/googlefonts/nunito (Google Fonts)
+      License: public/fonts/Nunito-OFL.txt
+      Copyright 2014 The Nunito Project Authors.
+
+  * Monaspace Radon
+      Source:  https://github.com/githubnext/monaspace
+      License: public/fonts/Monaspace-Radon-OFL.txt
+      Copyright (c) 2023, GitHub. Reserved Font Name "Monaspace".
+
+If you replace or remove these fonts, update this section and the
+corresponding @font-face references / public/_headers cache rules.
+
+
+3. Content — belongs to the site owner
+--------------------------------------
+Any articles, images and prose you add under src/content/ and src/assets/
+are your own and are NOT covered by the theme's MIT license. The demo /
+placeholder content shipped with this theme is provided only as a usage
+example; replace it with your own. The footer renders a content license
+(default CC BY-NC-ND 4.0) configurable via src/consts.ts and src/i18n/ui.ts.

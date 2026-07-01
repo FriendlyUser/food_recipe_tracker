@@ -1,0 +1,29 @@
+---
+// 一般靜態頁（about 等）：BaseLayout ＋ prose 置中容器
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} wide>
+	<article>
+		<div class="prose">
+			<slot />
+		</div>
+	</article>
+</BaseLayout>
+
+<style>
+	.prose {
+		width: 720px;
+		max-width: calc(100% - 2em);
+		margin: auto;
+		padding: 1em;
+		color: rgb(var(--gray-dark));
+	}
+</style>

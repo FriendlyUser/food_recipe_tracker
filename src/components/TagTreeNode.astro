@@ -1,0 +1,204 @@
+---
+// /tags 樹頁的單一群組節點：用 Astro.self 遞迴渲染子群組與葉 tag chips，
+// 深度不寫死——taxonomy 加到第幾層就渲染到第幾層（與 [...path].astro 一致）。
+import type { CollectionEntry } from 'astro:content';
+import { getAllLeafTags, toSlug } from '../lib/taxonomy';
+import type { TaxonomyNode } from '../lib/taxonomy';
+import { useTranslations } from '../i18n/utils';
+
+interface Props {
+  name: string;
+  node: TaxonomyNode;
+  // 含本層的完整 slug 路徑（如 "linux/kvm-qemu"），給「查看全部」連去群組頁
+  slugPath: string;
+  posts: CollectionEntry<'blog'>[];
+  tagCount: Map<string, number>;
+}
+
+const { name, node, slugPath, posts, tagCount } = Astro.props;
+const t = useTranslations();
+
+// 群組的文章數：與群組頁同一條判定（葉 tag、子群組名、群組自身名稱＝隱含 tag），去重計篇
+const leafTags = getAllLeafTags(node);
+const count = posts.filter(p => p.data.tags?.some(tg => tg === name || leafTags.includes(tg))).length;
+---
+
+<details open={node.defaultOpen}>
+  <summary>
+    <svg class="chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+    <span class="group-name">{name}</span>
+    <span class="group-count">{t('tags.sectionCount', { n: count })}</span>
+    <a class="group-link" href={`/tags/${slugPath}/`}>{t('tags.viewAll')}</a>
+  </summary>
+  <div class="detail-body">
+
+    {/* 子群組（遞迴） */}
+    {Object.entries(node.groups ?? {}).map(([childName, childNode]) => (
+      <Astro.self
+        name={childName}
+        node={childNode}
+        slugPath={`${slugPath}/${toSlug(childName)}`}
+        posts={posts}
+        tagCount={tagCount}
+      />
+    ))}
+
+    {/* 直屬葉節點。0 篇＝佔好位置但還沒有文章的「規劃中」tag，
+        樣式調淡與實色 chip 區隔（孤兒區的鏡像：那邊是有文章沒位置） */}
+    {(node.tags?.length ?? 0) > 0 && (
+      <div class="tag-chips">
+        {(node.tags ?? []).map(tag => {
+          const n = tagCount.get(tag) ?? 0;
+          return (
+            <a class:list={['tag-chip', { planned: n === 0 }]} href={`/tags/${toSlug(tag)}/`}>
+              {tag}
+              <span class="chip-count">{n === 0 ? t('tags.planned') : `(${n})`}</span>
+            </a>
+          );
+        })}
+      </div>
+    )}
+
+  </div>
+</details>
+
+<style>
+  /* details / summary 共用（同元件遞迴共享 scope，巢狀選擇器照常生效） */
+  details {
+    border-radius: 8px;
+    border: 1px solid rgb(var(--gray-light));
+    overflow: hidden;
+  }
+  /* 頂層群組：accent 左脊，強化第一層的視覺份量（.tag-tree 是父頁容器） */
+  :global(.tag-tree) > details {
+    border-left: 3px solid var(--accent);
+  }
+  details > summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    background: rgb(var(--gray-light) / 0.3);
+    user-select: none;
+    transition: background 0.15s;
+  }
+  details > summary:hover {
+    background: rgb(var(--gray-light) / 0.6);
+  }
+  details > summary::-webkit-details-marker { display: none; }
+
+  .chevron {
+    display: block;
+    color: rgb(var(--gray));
+    transition: transform 0.2s ease;
+    transform-origin: center;
+    flex-shrink: 0;
+  }
+  details[open] > summary .chevron {
+    transform: rotate(90deg);
+  }
+  /* 收合動畫進行中：箭頭立刻轉回 */
+  details.is-closing > summary .chevron {
+    transform: rotate(0deg);
+  }
+
+  .group-name {
+    font-weight: 700;
+    color: rgb(var(--black));
+    flex: 1;
+  }
+  .group-count {
+    font-size: 0.75rem;
+    color: rgb(var(--gray));
+    background: rgb(var(--gray-light) / 0.7);
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .group-link {
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--accent);
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .group-link:hover {
+    background: var(--accent-fill);
+    color: var(--on-accent-fill);
+  }
+
+  /* details 內容區 */
+  details > .detail-body {
+    box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  /* 子群組（第二層以下）：去框，改左縮排 + 垂直導引線，呈現樹狀層級。
+     每深一層會再套一次（border-left + 縮排），導引線自然往內縮。 */
+  details details {
+    border: none;
+    border-left: 2px solid rgb(var(--gray) / 0.3);
+    border-radius: 0;
+    overflow: visible;
+    margin-left: 0.25rem;
+  }
+  details details > summary {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.9rem;
+    background: transparent;
+  }
+  details details > summary:hover {
+    background: rgb(var(--gray-light) / 0.4);
+  }
+  /* 內層 details 的內容（巢狀群組 / chips）左側再縮一點，靠齊導引線 */
+  details details > .detail-body {
+    padding: 0.6rem 0.85rem;
+  }
+
+  /* 葉節點 tag chips */
+  .tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: var(--accent-light);
+    color: var(--tag-chip-fg);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1.5px solid transparent;
+    transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
+  }
+  .tag-chip:hover {
+    border-color: var(--accent-fill);
+    background: var(--accent-fill);
+    color: var(--on-accent-fill);
+    transform: translateY(-1px);
+  }
+  .tag-chip .chip-count {
+    font-size: 0.72rem;
+    font-weight: 400;
+  }
+  /* 規劃中（0 篇）：去填色、細實線框、灰字——調淡但仍屬於樹的視覺語言
+     （孤兒區用「虛線」表達「不在樹上」，這裡刻意不用虛線避免混淆） */
+  .tag-chip.planned {
+    background: transparent;
+    border-color: rgb(var(--gray) / 0.45);
+    color: rgb(var(--gray));
+    font-weight: 400;
+  }
+</style>

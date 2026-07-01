@@ -1,0 +1,40 @@
+---
+// 留言板派發層：讀 commentsConfig.provider，渲染對應 provider 元件。
+// 'none'（預設）時整塊不渲染。共用外殼（標題、間距、分隔線）放這裡，
+// provider 元件只管自己那塊（iframe / 掛載點），保持解耦。
+//
+// 接新 provider：在下方 switch 補一個 case，import 對應元件即可（見 data/comments.ts）。
+import { commentsConfig } from '../data/comments';
+import { useTranslations } from '../i18n/utils';
+import GiscusComments from './GiscusComments.astro';
+
+const t = useTranslations();
+const { provider } = commentsConfig;
+---
+
+{provider !== 'none' && (
+  <section class="comments" aria-label={t('comments.title')} data-pagefind-ignore>
+    <h2 class="comments-title">{t('comments.title')}</h2>
+    <div class="comments-mount">
+      {/* 接新 provider：在此補一個分支，import 對應元件即可 */}
+      {provider === 'giscus' && <GiscusComments />}
+    </div>
+  </section>
+)}
+
+<style>
+  /* 與 .related-posts 同一套區塊節奏：上方留白 + 細分隔線 */
+  .comments {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgb(var(--gray-light));
+  }
+  .comments-title {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgb(var(--gray));
+    margin: 0 0 1rem 0;
+  }
+</style>

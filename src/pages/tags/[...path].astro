@@ -1,0 +1,419 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import { byPubDateDesc, postDescription } from '../../lib/posts';
+import { SITE_TITLE } from '../../consts';
+import { taxonomy } from '../../data/taxonomy';
+import {
+  getAllLeafTags,
+  getAllTaxonomyTags,
+  getOrphanTags,
+  toSlug,
+} from '../../lib/taxonomy';
+import type { TaxonomyNode } from '../../lib/taxonomy';
+import { useTranslations } from '../../i18n/utils';
+const t = useTranslations();
+
+type PageType = 'group' | 'leaf';
+
+type Props = {
+  type: PageType;
+  displayName: string;
+  posts: CollectionEntry<'blog'>[];
+  // group 專用
+  node?: TaxonomyNode;
+  breadcrumb?: { name: string; path: string }[];
+};
+
+export const getStaticPaths = (async () => {
+  const posts = await getCollection('blog');
+  const paths: {
+    params: { path: string };
+    props: Props;
+  }[] = [];
+
+  // 已產生的路徑集合。葉 tag 全部攤平在 /tags/ 根層，slug 撞到群組頁
+  // （如 tag「Windows」vs 頂層群組「Windows」）時會默默互相覆蓋，
+  // 故規則定為：群組頁優先，葉頁讓位並於建置時警告。
+  const usedPaths = new Set<string>();
+
+  // ── 群組 / 子群組頁 ──
+  function walkGroups(
+    node: TaxonomyNode,
+    slugSegments: string[],
+    nameSegments: string[],
+  ) {
+    const slugPath = slugSegments.join('/');
+    const displayName = nameSegments[nameSegments.length - 1];
+
+    // 掛群組自身名稱的文章（隱含 tag＝直屬群組的未分類）也收進來
+    const leafTags = getAllLeafTags(node);
+    const groupPosts = posts
+      .filter(p => p.data.tags?.some(t => t === displayName || leafTags.includes(t)))
+      .sort(byPubDateDesc);
+
+    const breadcrumb = nameSegments.slice(0, -1).map((name, i) => ({
+      name,
+      path: nameSegments
+        .slice(0, i + 1)
+        .map(toSlug)
+        .join('/'),
+    }));
+
+    usedPaths.add(slugPath);
+    paths.push({
+      params: { path: slugPath },
+      props: {
+        type: 'group',
+        displayName,
+        posts: groupPosts,
+        node,
+        breadcrumb,
+      },
+    });
+
+    for (const [childName, childNode] of Object.entries(node.groups ?? {})) {
+      walkGroups(
+        childNode,
+        [...slugSegments, toSlug(childName)],
+        [...nameSegments, childName],
+      );
+    }
+  }
+
+  for (const [groupName, groupNode] of Object.entries(taxonomy)) {
+    walkGroups(groupNode, [toSlug(groupName)], [groupName]);
+  }
+
+  // ── 葉節點頁（taxonomy 內的 tag）──
+  const allTags = getAllTaxonomyTags();
+  for (const tag of allTags) {
+    const slug = toSlug(tag);
+    if (usedPaths.has(slug)) {
+      console.warn(`[taxonomy] Tag "${tag}" 的路徑 /tags/${slug}/ 與既有頁面碰撞，葉頁讓位（連結會落在群組頁）。建議重新命名其一。`);
+      continue;
+    }
+    usedPaths.add(slug);
+
+    const tagPosts = posts
+      .filter(p => p.data.tags?.includes(tag))
+      .sort(byPubDateDesc);
+
+    paths.push({
+      params: { path: slug },
+      props: {
+        type: 'leaf',
+        displayName: tag,
+        posts: tagPosts,
+      },
+    });
+  }
+
+  // ── taxonomy 外的 tag ──
+  // 群組名當 tag＝隱含 tag（直屬群組的未分類）：頂層群組名的文章由群組頁收納、
+  // 不另建葉頁；巢狀群組名（flat slug 沒被佔用）補一張葉頁方便文章頁的 chip 連過來。
+  // 其餘才是真孤兒：自動生成葉頁並警告。
+  const allPostTags = new Set(posts.flatMap(p => p.data.tags ?? []));
+  const orphanTags = new Set(getOrphanTags(allPostTags));
+  for (const tag of allPostTags) {
+    if (allTags.has(tag)) continue;
+
+    const slug = toSlug(tag);
+    if (!orphanTags.has(tag)) {
+      // 非孤兒又不是葉 tag ⇒ 群組名當隱含 tag
+      if (usedPaths.has(slug)) continue; // 群組頁已收納，葉頁不用建
+    } else if (usedPaths.has(slug)) {
+      console.warn(`[taxonomy] 孤兒 tag "${tag}" 的路徑 /tags/${slug}/ 與既有頁面碰撞，葉頁讓位。建議重新命名其一。`);
+      continue;
+    } else {
+      console.warn(`[taxonomy] Tag "${tag}" 不在 taxonomy.ts，已自動生成基本頁面，請記得補充分類。`);
+    }
+    usedPaths.add(slug);
+
+    const tagPosts = posts
+      .filter(p => p.data.tags?.includes(tag))
+      .sort(byPubDateDesc);
+
+    paths.push({
+      params: { path: slug },
+      props: {
+        type: 'leaf',
+        displayName: tag,
+        posts: tagPosts,
+      },
+    });
+  }
+
+  return paths;
+}) satisfies GetStaticPaths;
+
+const { type, displayName, posts, node, breadcrumb } = Astro.props;
+
+const pageTitle =
+  type === 'group'
+    ? `${displayName} — ${t('tags.title')} — ${SITE_TITLE}`
+    : `#${displayName} — ${t('tags.title')} — ${SITE_TITLE}`;
+---
+
+<BaseLayout title={pageTitle} description={t('tags.leafDescription', { name: displayName })} noindex>
+  <div class="tag-page">
+
+    {/* 麵包屑 */}
+    <nav class="breadcrumb">
+      <a href="/tags/">{t('tags.title')}</a>
+      {(breadcrumb ?? []).map(crumb => (
+        <>
+          <span class="sep">/</span>
+          <a href={`/tags/${crumb.path}/`}>{crumb.name}</a>
+        </>
+      ))}
+      {(breadcrumb?.length ?? 0) > 0 && (
+        <><span class="sep">/</span><span>{displayName}</span></>
+      )}
+    </nav>
+
+    {/* 標題 */}
+    <div class="page-heading">
+      <h1>{type === 'leaf' ? `#${displayName}` : displayName}</h1>
+      <span class="post-count">{t('tags.postCount', { n: posts.length })}</span>
+    </div>
+
+    {/* 群組頁：顯示底下的子群組和葉節點 */}
+    {type === 'group' && node && (() => {
+      const chips: { name: string; href: string; isGroup: boolean }[] = [];
+      const currentSlugPath = Astro.params.path as string;
+
+      // 子群組
+      for (const subName of Object.keys(node.groups ?? {})) {
+        chips.push({
+          name: subName,
+          href: `/tags/${currentSlugPath}/${toSlug(subName)}/`,
+          isGroup: true,
+        });
+      }
+      // 直屬葉節點
+      for (const tag of node.tags ?? []) {
+        chips.push({
+          name: tag,
+          href: `/tags/${toSlug(tag)}/`,
+          isGroup: false,
+        });
+      }
+
+      return chips.length > 0 ? (
+        <div class="sub-tags">
+          {chips.map(chip => (
+            <a
+              class={`tag-chip${chip.isGroup ? ' is-group' : ''}`}
+              href={chip.href}
+            >
+              {chip.isGroup && (
+                <svg class="folder-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              )}
+              {chip.name}
+            </a>
+          ))}
+        </div>
+      ) : null;
+    })()}
+
+    {/* 文章列表 */}
+    {posts.length === 0 ? (
+      <p class="empty">{t('tags.empty')}</p>
+    ) : (
+      <ul class="post-list">
+        {posts.map(post => (
+          <li class="post-card">
+            {/* <a> 不能巢狀（parser 會拆開 DOM），整卡可點改用標題連結的 ::after 鋪滿卡片 */}
+            <h2><a class="post-link" href={`/blog/${post.id}/`}>{post.data.title}</a></h2>
+            <p class="post-desc">{postDescription(post)}</p>
+            <div class="post-meta">
+              <FormattedDate date={post.data.pubDate} />
+              <div class="post-tags">
+                {post.data.tags?.map(tag => (
+                  tag === displayName ? (
+                    /* 當前 tag：純標示（非連結），避開 self-link :visited 染色、語意更準 */
+                    <span class="post-tag-chip current">{tag}</span>
+                  ) : (
+                    <a class="post-tag-chip" href={`/tags/${toSlug(tag)}/`}>
+                      {tag}
+                    </a>
+                  )
+                ))}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+
+  </div>
+</BaseLayout>
+
+<style>
+      .tag-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+
+      /* 麵包屑 */
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        color: rgb(var(--gray));
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+      }
+      .breadcrumb a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .breadcrumb a:hover { text-decoration: underline; }
+      .breadcrumb .sep { opacity: 0.5; }
+
+      /* 標題列 */
+      .page-heading {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .page-heading h1 {
+        font-size: 2rem;
+        margin: 0;
+      }
+      .post-count {
+        font-size: 0.9rem;
+        color: rgb(var(--gray));
+      }
+
+      /* 群組頁：子 tag chips */
+      .sub-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgb(var(--gray-light));
+      }
+      .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        background: var(--accent-light);
+        color: var(--tag-chip-fg);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1.5px solid transparent;
+        transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
+      }
+      .tag-chip:hover {
+        border-color: var(--accent-fill);
+        background: var(--accent-fill);
+        color: var(--on-accent-fill);
+        transform: translateY(-1px);
+      }
+      .tag-chip .folder-icon {
+        flex-shrink: 0;
+        opacity: 0.85;
+      }
+      .chip-count {
+        font-size: 0.72rem;
+        font-weight: 400;
+      }
+
+      /* 文章列表 */
+      .post-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+      .post-card {
+        position: relative; /* ::after 覆蓋連結的定位基準 */
+        border-left: 3px solid var(--accent);
+        padding: 0.5rem 0.75rem 0.6rem 1rem;
+        border-radius: 0 8px 8px 0;
+        transition: background 0.18s ease;
+      }
+      .post-card:hover {
+        background: rgb(var(--gray-light) / 0.4);
+      }
+      .post-card h2 {
+        font-size: 1.15rem;
+        margin: 0 0 0.3rem;
+      }
+      .post-link {
+        text-decoration: none;
+        color: rgb(var(--black));
+        transition: color 0.2s;
+      }
+      /* 鋪滿整張卡片＝整卡可點；chip 連結靠 position:relative（DOM 在後）疊在其上 */
+      .post-link::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+      .post-card:hover .post-link { color: var(--accent); }
+      .post-desc {
+        margin: 0.35rem 0 0;
+        font-size: 0.85rem;
+        color: rgb(var(--gray));
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .post-meta {
+        font-size: 0.82rem;
+        color: rgb(var(--gray));
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .post-tags {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+      }
+      .post-tag-chip {
+        position: relative; /* 疊在 .post-link::after 之上，維持可點 */
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        background: var(--accent-light);
+        color: var(--tag-chip-fg);
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+      }
+      .post-tag-chip:hover {
+        background: var(--accent-fill);
+        color: var(--on-accent-fill);
+      }
+      .post-tag-chip.current {
+        background: var(--tag-current-bg);
+        color: var(--tag-current-fg);
+        cursor: default;
+      }
+
+      .empty {
+        color: rgb(var(--gray));
+        font-size: 0.95rem;
+      }
+    </style>
+

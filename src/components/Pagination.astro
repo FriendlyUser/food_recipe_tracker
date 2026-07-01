@@ -1,0 +1,131 @@
+---
+interface Props {
+	currentPage: number;
+	lastPage: number;
+}
+
+import { useTranslations } from '../i18n/utils';
+const t = useTranslations();
+
+const { currentPage, lastPage } = Astro.props;
+
+// 頁碼 → URL：第 1 頁是 /blog/，其餘是 /blog/page/N/
+const hrefFor = (p: number) => (p === 1 ? '/blog/' : `/blog/page/${p}/`);
+
+// 產生要顯示的頁碼序列，過多時以 '…' 省略：永遠顯示首頁、末頁與當前頁 ±1
+function buildItems(cur: number, last: number): (number | 'gap')[] {
+	if (last <= 7) return Array.from({ length: last }, (_, i) => i + 1);
+	const items = new Set<number>([1, last, cur, cur - 1, cur + 1]);
+	const sorted = [...items].filter(n => n >= 1 && n <= last).sort((a, b) => a - b);
+	const out: (number | 'gap')[] = [];
+	let prev = 0;
+	for (const n of sorted) {
+		if (n - prev > 1) out.push('gap');
+		out.push(n);
+		prev = n;
+	}
+	return out;
+}
+
+const items = buildItems(currentPage, lastPage);
+const hasPrev = currentPage > 1;
+const hasNext = currentPage < lastPage;
+---
+
+{lastPage > 1 && (
+	<nav class="pagination" aria-label={t('pagination.nav')}>
+		<a
+			class={'page-arrow' + (hasPrev ? '' : ' disabled')}
+			href={hasPrev ? hrefFor(currentPage - 1) : undefined}
+			aria-label={t('pagination.prev')}
+			aria-disabled={hasPrev ? undefined : 'true'}
+		>
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+		</a>
+
+		{items.map(item => (
+			item === 'gap' ? (
+				<span class="page-gap" aria-hidden="true">…</span>
+			) : item === currentPage ? (
+				<span class="page-num active" aria-current="page">{item}</span>
+			) : (
+				<a class="page-num" href={hrefFor(item)}>{item}</a>
+			)
+		))}
+
+		<a
+			class={'page-arrow' + (hasNext ? '' : ' disabled')}
+			href={hasNext ? hrefFor(currentPage + 1) : undefined}
+			aria-label={t('pagination.next')}
+			aria-disabled={hasNext ? undefined : 'true'}
+		>
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+		</a>
+	</nav>
+)}
+
+<style>
+	.pagination {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		margin-top: 2.5rem;
+		flex-wrap: wrap;
+	}
+
+	.page-num,
+	.page-arrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 2.2rem;
+		height: 2.2rem;
+		padding: 0 0.5rem;
+		border-radius: 8px;
+		border: 1px solid rgba(var(--gray-light), 0.8);
+		background: rgba(var(--gray-light), 0.25);
+		color: rgb(var(--black));
+		text-decoration: none;
+		font-size: 0.9rem;
+		transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+	}
+
+	.page-num:hover,
+	.page-arrow:not(.disabled):hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		transform: translateY(-2px);
+	}
+
+	.page-num.active {
+		background: var(--accent-fill);
+		border-color: var(--accent-fill);
+		color: var(--on-accent-fill);
+		font-weight: 700;
+		cursor: default;
+	}
+
+	.page-arrow.disabled {
+		opacity: 0.4;
+		pointer-events: none;
+	}
+
+	.page-gap {
+		min-width: 1.5rem;
+		text-align: center;
+		color: rgb(var(--gray));
+		user-select: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.page-num,
+		.page-arrow {
+			transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+		}
+		.page-num:hover,
+		.page-arrow:not(.disabled):hover {
+			transform: none;
+		}
+	}
+</style>

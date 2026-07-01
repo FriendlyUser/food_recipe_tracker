@@ -1,0 +1,41 @@
+---
+import { getSortedPosts } from '../../lib/posts';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
+import Pagination from '../../components/Pagination.astro';
+import { SITE_TITLE, POSTS_PER_PAGE } from '../../consts';
+import { useTranslations } from '../../i18n/utils';
+const t = useTranslations();
+
+const allPosts = await getSortedPosts();
+
+const posts = allPosts.slice(0, POSTS_PER_PAGE);
+const lastPage = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
+---
+
+<BaseLayout title={`${t('blog.allPosts')} — ${SITE_TITLE}`} description={t('blog.metaDescription')}>
+	<div class="page-header">
+		<h1>{t('blog.allPosts')}</h1>
+		<span class="post-count">{t('blog.totalCount', { n: allPosts.length })}</span>
+	</div>
+	<PostList posts={posts} />
+	<Pagination currentPage={1} lastPage={lastPage} />
+</BaseLayout>
+
+<style>
+	/* ── 頁面標題 ── */
+	.page-header {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+	.page-header h1 {
+		font-size: 2rem;
+		margin: 0;
+	}
+	.post-count {
+		font-size: 0.9rem;
+		color: rgb(var(--gray));
+	}
+</style>

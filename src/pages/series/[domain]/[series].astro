@@ -1,0 +1,147 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { SITE_TITLE } from '../../../consts';
+import { seriesData } from '../../../data/series';
+import { validateSeriesData } from '../../../lib/series';
+import { useTranslations } from '../../../i18n/utils';
+const t = useTranslations();
+
+export async function getStaticPaths() {
+  // 建置期驗證 key 格式與 chapter slug（打錯字直接 fail build，不默默 404）
+  const allPosts = await getCollection('blog');
+  validateSeriesData(new Set(allPosts.map((p) => p.id)));
+
+  const paths: { params: { domain: string; series: string } }[] = [];
+  for (const [domainKey, domain] of Object.entries(seriesData)) {
+    for (const seriesKey of Object.keys(domain.series)) {
+      paths.push({ params: { domain: domainKey, series: seriesKey } });
+    }
+  }
+  return paths;
+}
+
+const { domain: domainKey, series: seriesKey } = Astro.params;
+const domain = seriesData[domainKey];
+const series = domain.series[seriesKey];
+
+// 拿所有 post 的 title，讓 chapter 可以省略 title 直接沿用
+const allPosts = await getCollection('blog');
+const postTitleMap = new Map(allPosts.map((p) => [p.id, p.data.title]));
+
+const parts = series.parts.map((part) => ({
+  title: part.title,
+  chapters: part.chapters.map((ch) => ({
+    slug: ch.slug,
+    title: ch.title ?? postTitleMap.get(ch.slug) ?? ch.slug,
+  })),
+}));
+
+const totalChapters = parts.reduce((sum, p) => sum + p.chapters.length, 0);
+---
+
+<BaseLayout
+  title={`${series.title} — ${SITE_TITLE}`}
+  description={series.description ?? t('series.detailMetaDescription', { title: series.title })}
+>
+  <div class="series-page">
+    <p class="breadcrumb">
+      <a href="/series/">{t('series.title')}</a> /
+      <a href={`/series/${domainKey}/`}>{domain.title}</a> /
+      {series.title}
+    </p>
+    <div class="series-header">
+      <h1>{series.title}</h1>
+      {series.description && <p class="series-desc">{series.description}</p>}
+      <span class="series-meta">{t('series.partAndChapters', { parts: parts.length, chapters: totalChapters })}</span>
+    </div>
+
+    {parts.map((part) => (
+      <div class="part-section">
+        <div class="part-title">{part.title}</div>
+        <ul class="chapter-list">
+          {part.chapters.map((ch) => (
+            <li>
+              <a href={`/blog/${ch.slug}/`}>{ch.title}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+      .series-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      .breadcrumb {
+        font-size: 0.88rem;
+        color: rgb(var(--gray));
+        margin-bottom: 1rem;
+      }
+      .breadcrumb a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .breadcrumb a:hover { text-decoration: underline; }
+      .series-header {
+        margin-bottom: 2rem;
+      }
+      .series-header h1 {
+        font-size: 2rem;
+        margin: 0 0 0.5rem 0;
+      }
+      .series-desc {
+        color: rgb(var(--gray-dark));
+        margin: 0 0 0.5rem 0;
+      }
+      .series-meta {
+        font-size: 0.85rem;
+        color: rgb(var(--gray));
+      }
+      .part-section {
+        margin-bottom: 2rem;
+      }
+      .part-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: rgb(var(--gray-dark));
+        padding: 0.4rem 0;
+        border-bottom: 2px solid var(--accent);
+        margin-bottom: 0.75rem;
+      }
+      .chapter-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .chapter-list li a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        text-decoration: none;
+        color: rgb(var(--black));
+        font-size: 0.95rem;
+        transition: background 0.15s, color 0.15s;
+        border: 1px solid transparent;
+      }
+      .chapter-list li a:hover {
+        background: var(--accent-light);
+        color: var(--accent-dark);
+        border-color: rgb(var(--accent-dark) / 0.15);
+      }
+      .chapter-list li a::before {
+        content: '›';
+        color: var(--accent);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+    </style>

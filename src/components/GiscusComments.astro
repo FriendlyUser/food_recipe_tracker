@@ -1,0 +1,120 @@
+---
+// Giscus provider（第一個填進 Comments 派發層的範例實作）。
+// 載入策略與主題偵測都靠 lib/comments-client 的共用工具，這裡只負責
+// 「怎麼掛載 giscus」與「收到主題後怎麼通知 iframe」——provider 專屬的那兩塊。
+// 設定值寫進 data-*，由下方 script 在 astro:page-load 時讀出再注入 giscus client，
+// 以配合 ClientRouter（換頁不重跑 module，只抽換 DOM）。
+import { commentsConfig } from '../data/comments';
+import { useTranslations } from '../i18n/utils';
+import { siteLocale } from '../i18n/ui';
+
+const t = useTranslations();
+const g = commentsConfig.giscus;
+const loading = commentsConfig.loading;
+---
+
+{g && (
+  <div
+    id="giscus-container"
+    data-repo={g.repo}
+    data-repo-id={g.repoId}
+    data-category={g.category}
+    data-category-id={g.categoryId}
+    data-mapping={g.mapping}
+    data-reactions={g.reactionsEnabled ? '1' : '0'}
+    data-input-position={g.inputPosition}
+    data-lang={siteLocale.giscus}
+    data-loading={loading}
+  >
+    {loading === 'click' && (
+      <button type="button" id="giscus-load-btn" class="giscus-load-btn">
+        {t('comments.load')}
+      </button>
+    )}
+  </div>
+)}
+
+<script>
+  import { whenReady, watchTheme, resolveTheme } from '../lib/comments-client';
+  import type { CommentsLoading } from '../lib/comments-client';
+
+  let cleanups: Array<() => void> = [];
+  function teardown() {
+    cleanups.forEach(fn => fn());
+    cleanups = [];
+  }
+
+  // 注入 giscus client（giscus 從 <script> 的 data-* 讀設定，故動態組出來）。
+  function mountGiscus(container: HTMLElement) {
+    const d = container.dataset;
+    const s = document.createElement('script');
+    s.src = 'https://giscus.app/client.js';
+    s.async = true;
+    s.crossOrigin = 'anonymous';
+    s.setAttribute('data-repo', d.repo!);
+    s.setAttribute('data-repo-id', d.repoId!);
+    s.setAttribute('data-category', d.category!);
+    s.setAttribute('data-category-id', d.categoryId!);
+    s.setAttribute('data-mapping', d.mapping!);
+    s.setAttribute('data-strict', '1'); // 嚴格標題匹配，避免模糊搜尋串錯
+    s.setAttribute('data-reactions-enabled', d.reactions === '1' ? '1' : '0');
+    s.setAttribute('data-emit-metadata', '0');
+    s.setAttribute('data-input-position', d.inputPosition!);
+    s.setAttribute('data-theme', resolveTheme()); // light/dark 同名，giscus 直接吃
+    s.setAttribute('data-lang', d.lang!); // 來自 siteLocale.giscus（container 的 data-lang）
+    container.appendChild(s);
+  }
+
+  // 主題切換：postMessage 給 giscus iframe（giscus 收 setConfig.theme）
+  function setGiscusTheme(theme: 'light' | 'dark') {
+    const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+    iframe?.contentWindow?.postMessage(
+      { giscus: { setConfig: { theme } } },
+      'https://giscus.app',
+    );
+  }
+
+  function setup() {
+    const container = document.getElementById('giscus-container');
+    if (!container) return;
+
+    const load = () => {
+      document.getElementById('giscus-load-btn')?.remove(); // click 模式：載入後移除按鈕
+      mountGiscus(container);
+      // 載入後才開始盯主題：切換時即時同步給 iframe
+      cleanups.push(watchTheme(setGiscusTheme));
+    };
+
+    const strategy = (container.dataset.loading ?? 'lazy') as CommentsLoading;
+    cleanups.push(
+      whenReady(strategy, {
+        target: container,
+        trigger: document.getElementById('giscus-load-btn'),
+        load,
+      }),
+    );
+  }
+
+  // 與 BlogPost 同套 lifecycle：每次換頁（含首次）重新初始化，換頁前清掉觀察/監聽
+  document.addEventListener('astro:page-load', setup);
+  document.addEventListener('astro:before-swap', teardown);
+</script>
+
+<style>
+  .giscus-load-btn {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .giscus-load-btn:hover {
+    background: var(--accent-fill);
+    color: var(--on-accent-fill);
+  }
+</style>

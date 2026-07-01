@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BlogrollCard from '../components/BlogrollCard.astro';
+import { SITE_TITLE } from '../consts';
+import { blogroll } from '../data/blogroll';
+import { useTranslations } from '../i18n/utils';
+const t = useTranslations();
+---
+
+<BaseLayout title={`${t('blogroll.title')} — ${SITE_TITLE}`} description={t('blogroll.metaDescription')}>
+  <div class="blogroll-page">
+    <h1>{t('blogroll.title')}</h1>
+    <p class="intro">{t('blogroll.intro')}</p>
+
+    {blogroll.length > 0 ? (
+      <div class="card-grid">
+        {blogroll.map((link) => <BlogrollCard {...link} />)}
+      </div>
+    ) : (
+      <p class="empty">{t('blogroll.empty')}</p>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+      .blogroll-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+      .intro {
+        color: rgb(var(--gray));
+        margin: 0 0 2rem 0;
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+      @media (max-width: 600px) {
+        .card-grid { grid-template-columns: 1fr; }
+      }
+      .empty {
+        text-align: center;
+        color: rgb(var(--gray));
+        padding: 3rem 1rem;
+        border: 1px dashed rgba(var(--gray-light), 0.9);
+        border-radius: 12px;
+      }
+    </style>

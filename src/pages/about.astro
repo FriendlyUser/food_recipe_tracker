@@ -1,0 +1,52 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../layouts/Page.astro";
+import AvatarImage from "../assets/avatar.png";
+import { SITE_AUTHOR, COPYRIGHT_NAME } from "../consts";
+import { useTranslations } from "../i18n/utils";
+const t = useTranslations();
+// 授權段：設了 CC（license.url 非空）就顯示連結＋聯絡條款；否則只顯示「© 作者. <授權>.」
+const licenseUrl = t("license.url");
+const licenseContact = t("license.contact");
+---
+
+<Layout title={t("about.title")} description={t("about.metaDescription")}>
+    <div class="avatar">
+        <Image src={AvatarImage} alt={SITE_AUTHOR} width={200} height={200} />
+    </div>
+
+    <p style="margin-bottom: 0;">
+        「在這裡放一句你喜歡的話，或一段能代表這個站的引言。」
+    </p>
+    <div style="text-align: right;">— 出處</div>
+
+    <h3>部落格介紹</h3>
+    <p>
+        這是「關於」頁的範本內容。把這幾段換成你自己的介紹：這個 Blog 想寫什麼、
+        為什麼開始寫、希望讀者帶走什麼。版面與樣式都已備好，你只需要替換文字。
+    </p>
+
+    <h3>自我介紹</h3>
+    <p>
+        簡單介紹你自己——你是誰、在做什麼、對哪些主題有興趣。
+        這一段是選填的，不需要的話可以整段刪掉。
+    </p>
+
+    {licenseUrl ? (
+        <p>
+            引用文章時請註明文章網址，並遵守{" "}
+            <a href={licenseUrl} target="_blank">{t("license.fullName")}</a>
+            {licenseContact && <>，{licenseContact}</>}
+        </p>
+    ) : (
+        <p>© {COPYRIGHT_NAME}. {t("license.fullName")}.</p>
+    )}
+
+    <h3>聯繫方式</h3>
+    <ul>
+        <li>
+            <a href="https://github.com/your-name" target="_blank">GitHub</a>
+        </li>
+        <li>RSS: <code>{new URL("rss.xml", Astro.site).href}</code></li>
+    </ul>
+</Layout>

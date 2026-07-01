@@ -1,0 +1,131 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { useTranslations } from '../i18n/utils';
+const t = useTranslations();
+
+// 沿用 Header 的導覽連結（無尾斜線，與 Header 一致），404 不另造路由。
+const navLinks = [
+	{ href: '/blog', key: 'nav.blog' },
+	{ href: '/tags', key: 'nav.tags' },
+	{ href: '/series', key: 'nav.series' },
+	{ href: '/blogroll', key: 'nav.blogroll' },
+	{ href: '/about', key: 'nav.about' },
+] as const;
+---
+
+<BaseLayout
+	title={t('notFound.metaTitle')}
+	description={t('notFound.metaDescription')}
+	noindex
+>
+	<section class="notfound">
+		<!-- OS 風味：模擬找不到檔案的 shell 輸出，扣緊 Blog 主題。
+		     路徑由下方 script 填入實際嘗試的網址；aria-hidden 因語意已由 heading 表達。 -->
+		<pre class="shell" aria-hidden="true"><span class="prompt">$</span> cat <span class="path" data-nf-path>/…</span>
+cat: <span data-nf-path>/…</span>: 找不到該檔案或目錄</pre>
+		<p class="code">404</p>
+		<h1 class="heading">{t('notFound.heading')}</h1>
+		<p class="message">{t('notFound.message')}</p>
+		<a class="home" href="/">{t('notFound.home')}</a>
+		<nav class="links" aria-label={t('notFound.linksLabel')}>
+			<span class="links-label">{t('notFound.linksLabel')}</span>
+			{navLinks.map(l => <a href={l.href}>{t(l.key)}</a>)}
+		</nav>
+	</section>
+</BaseLayout>
+
+<script>
+	// 把實際嘗試的網址填進終端機片段。初次硬載入與 ClientRouter 換頁都要處理。
+	function fillNotFoundPath() {
+		const path = location.pathname + location.search;
+		document.querySelectorAll('[data-nf-path]').forEach(el => {
+			el.textContent = path;
+		});
+	}
+	fillNotFoundPath();
+	document.addEventListener('astro:page-load', fillNotFoundPath);
+</script>
+
+<style>
+	.notfound {
+		max-width: 640px;
+		margin: 2rem auto;
+		padding: 1em;
+		text-align: center;
+	}
+
+	/* 終端機輸出片段：等寬字、左對齊、低調 */
+	.shell {
+		text-align: left;
+		display: inline-block;
+		margin: 0 auto 1.5rem;
+		padding: 0.9em 1.1em;
+		border-radius: 8px;
+		background: rgba(var(--gray-light), 0.5);
+		border: 1px solid rgba(var(--gray), 0.25);
+		color: rgb(var(--gray-dark));
+		font-size: 0.9rem;
+		line-height: 1.5;
+		overflow-x: auto;
+		max-width: 100%;
+	}
+	.shell .prompt { color: var(--accent-dark); font-weight: 700; }
+	.shell .path { color: var(--accent-dark); }
+
+	.code {
+		margin: 0;
+		font-size: 5rem;
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: 0.05em;
+		color: var(--accent);
+	}
+
+	.heading {
+		margin: 0.4rem 0 0.6rem;
+		font-size: 1.6rem;
+		color: rgb(var(--black));
+	}
+
+	.message {
+		margin: 0 auto 1.6rem;
+		max-width: 30rem;
+		color: rgb(var(--gray-dark));
+		line-height: 1.7;
+	}
+
+	.home {
+		display: inline-block;
+		padding: 0.55em 1.4em;
+		border-radius: 8px;
+		background: var(--accent-fill);
+		color: var(--on-accent-fill);
+		font-weight: 700;
+		text-decoration: none;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+	}
+	.home:hover {
+		transform: translateY(-2px);
+		box-shadow: var(--box-shadow);
+	}
+
+	.links {
+		margin-top: 2rem;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem 1rem;
+		font-size: 0.9rem;
+	}
+	.links-label {
+		color: rgb(var(--gray));
+	}
+	.links a {
+		color: var(--accent-dark);
+		text-decoration: none;
+	}
+	.links a:hover {
+		text-decoration: underline;
+	}
+</style>

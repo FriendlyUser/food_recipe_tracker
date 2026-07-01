@@ -1,0 +1,54 @@
+{
+  "name": "biluo",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "碧落 Biluo — 注重效能與排版的 Astro 部落格主題（zh-Hant）。A clean, performance-focused Astro blog theme.",
+  "license": "MIT",
+  "author": "Just-Passersby",
+  "homepage": "https://github.com/Just-Passersby/astro-biluo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Just-Passersby/astro-biluo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Just-Passersby/astro-biluo/issues"
+  },
+  "keywords": [
+    "astro",
+    "astro-theme",
+    "astro-blog",
+    "blog",
+    "theme",
+    "biluo",
+    "zh-hant",
+    "cloudflare-workers"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "pnpm run build && wrangler dev",
+    "astro": "astro",
+    "generate-types": "wrangler types",
+    "deploy": "pnpm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "7.2.0",
+    "@astrojs/mdx": "^7.0.0",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.0.3",
+    "remark-github-blockquote-alert": "^2.1.0",
+    "sharp": "^0.34.3"
+  },
+  "devDependencies": {
+    "pagefind": "^1.5.2",
+    "rehype-autolink-headings": "^7.1.0",
+    "wrangler": "^4.95.0"
+  },
+  "packageManager": "pnpm@11.9.0"
+}

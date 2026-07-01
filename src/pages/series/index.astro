@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeriesCard from '../../components/SeriesCard.astro';
+import { SITE_TITLE } from '../../consts';
+import { seriesData } from '../../data/series';
+import { useTranslations } from '../../i18n/utils';
+const t = useTranslations();
+
+const domains = Object.entries(seriesData).map(([key, domain]) => ({
+  key,
+  title: domain.title,
+  heroImage: domain.heroImage,
+  heroDarkness: domain.heroDarkness,
+  seriesCount: Object.keys(domain.series).length,
+  chapterCount: Object.values(domain.series).reduce(
+    (sum, s) => sum + s.parts.reduce((ps, p) => ps + p.chapters.length, 0),
+    0,
+  ),
+}));
+---
+
+<BaseLayout title={`${t('series.title')} — ${SITE_TITLE}`} description={t('series.metaDescription')}>
+  <div class="series-page">
+    <h1>{t('series.title')}</h1>
+    {domains.length === 0 && <p class="empty">{t('series.empty')}</p>}
+    <div class="card-grid">
+      {domains.map(d => (
+        <SeriesCard
+          href={`/series/${d.key}/`}
+          title={d.title}
+          meta={[t('series.seriesCount', { n: d.seriesCount }), t('series.chapterCount', { n: d.chapterCount })]}
+          heroImage={d.heroImage}
+          heroDarkness={d.heroDarkness}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+      .series-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      h1 { font-size: 2rem; margin-bottom: 2rem; }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+      @media (max-width: 600px) {
+        .card-grid { grid-template-columns: 1fr; }
+      }
+      .empty {
+        color: rgb(var(--gray));
+        padding: 3rem 0;
+        text-align: center;
+      }
+    </style>

@@ -1,0 +1,105 @@
+---
+import { useTranslations } from '../i18n/utils';
+const t = useTranslations();
+---
+
+<button id="theme-toggle" title={t('theme.toggle')}>
+  <svg id="icon-system" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+  </svg>
+  <svg id="icon-light" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+  <svg id="icon-dark" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
+<script>
+  const order = ['system', 'light', 'dark'] as const;
+  type Theme = typeof order[number];
+
+  function updateIcon(theme: Theme) {
+    document.getElementById('icon-system')!.style.display = theme === 'system' ? '' : 'none';
+    document.getElementById('icon-light')!.style.display = theme === 'light' ? '' : 'none';
+    document.getElementById('icon-dark')!.style.display = theme === 'dark' ? '' : 'none';
+  }
+
+  // <html> 永遠帶 .dark 或 .light（與 BaseHead 的開頭 script 同一慣例），
+  // 「跟隨系統」在套用當下解析成其中之一
+  function resolveDark(theme: Theme): boolean {
+    return theme === 'dark' ||
+      (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
+  function applyTheme(theme: Theme) {
+    localStorage.setItem('theme', theme);
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(resolveDark(theme) ? 'dark' : 'light');
+    updateIcon(theme);
+  }
+
+  // Button persists with the header — bind once
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  updateIcon((localStorage.getItem('theme') ?? 'system') as Theme);
+
+  // 跟隨系統時，OS 主題切換要即時反映（class 是唯一來源，沒有 @media 後備）
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if ((localStorage.getItem('theme') ?? 'system') !== 'system') return;
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(e.matches ? 'dark' : 'light');
+  });
+
+  btn?.addEventListener('click', () => {
+    const cur = (localStorage.getItem('theme') ?? 'system') as Theme;
+    const next = order[(order.indexOf(cur) + 1) % order.length];
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const startVT = (document as any).startViewTransition?.bind(document);
+
+    // 不支援 View Transitions 或使用者偏好減少動態 → 直接切換
+    if (!startVT || reduceMotion) {
+      applyTheme(next);
+      return;
+    }
+
+    // 圓心 = 切換按鈕中心（按鈕隱藏時退回右上角）
+    const rect = btn.getBoundingClientRect();
+    const x = rect.width ? rect.left + rect.width / 2 : window.innerWidth;
+    const y = rect.height ? rect.top + rect.height / 2 : 0;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    );
+
+    root.style.setProperty('--theme-x', `${x}px`);
+    root.style.setProperty('--theme-y', `${y}px`);
+    root.style.setProperty('--theme-end-r', `${endRadius}px`);
+    root.classList.add('theme-switching');
+
+    const transition = startVT(() => applyTheme(next));
+    transition.finished.finally(() => root.classList.remove('theme-switching'));
+  });
+</script>
+
+<style>
+  button {
+    background: transparent;
+    /* border: 1px solid rgba(var(--gray), 30%); */
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem;
+    cursor: pointer;
+    color: rgb(var(--black));
+    display: flex;
+    align-items: center;
+    transition: background 0.2s;
+  }
+  /* button:hover {
+    background: var(--accent-light);
+  } */
+  button:hover {
+    opacity: 0.7;
+}
+</style>
