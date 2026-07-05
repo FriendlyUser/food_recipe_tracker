@@ -158,7 +158,13 @@ const pageTitle =
     : `#${displayName} — ${t('tags.title')} — ${SITE_TITLE}`;
 ---
 
-<BaseLayout title={pageTitle} description={t('tags.leafDescription', { name: displayName })} noindex>
+<BaseLayout
+  title={pageTitle}
+  description={type === 'group'
+    ? t('tags.groupDescription', { name: displayName })
+    : t('tags.leafDescription', { name: displayName })}
+  noindex
+>
   <div class="tag-page">
 
     {/* 麵包屑 */}

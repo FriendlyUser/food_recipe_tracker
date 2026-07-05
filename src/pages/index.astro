@@ -4,7 +4,7 @@ import SeriesCard from '../components/SeriesCard.astro';
 import PostList from '../components/PostList.astro';
 import { SITE_AUTHOR, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import FormattedDate from '../components/FormattedDate.astro';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { getSortedPosts, postDescription } from '../lib/posts';
 import AvatarImage from '../assets/avatar.png';
 import defaultHero from '../assets/hero-image-holder.jpg';
@@ -38,6 +38,9 @@ const featuredSeries = Object.entries(seriesData).flatMap(([domainKey, domain]) 
 
 // ── JSON-LD 結構化資料 ──
 const homeUrl = new URL('/', Astro.site).href;
+// Person image 給爬蟲抓的，不直接用 AvatarImage.src（原圖）；頭像是方形，
+// 不走 og-image 的 1200×630 裁切，這裡自己縮成 400×400 JPEG（png 進 jpeg 出沒問題）。
+const personImage = await getImage({ src: AvatarImage, width: 400, height: 400, format: 'jpeg', quality: 80 });
 const jsonLd = [
   {
     '@context': 'https://schema.org',
@@ -53,7 +56,7 @@ const jsonLd = [
     '@type': 'Person',
     name: SITE_AUTHOR,
     url: homeUrl,
-    image: new URL(AvatarImage.src, Astro.site).href,
+    image: new URL(personImage.src, Astro.site).href,
   },
 ];
 ---

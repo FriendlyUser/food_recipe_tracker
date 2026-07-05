@@ -46,6 +46,9 @@ export default defineConfig({
 	integrations: [
 		mdx(),
 		sitemap({
+			// /tags/* 全帶 noindex（BaseLayout 的 noindex prop），不該同時出現在
+			// sitemap——「請索引」與「勿索引」互相矛盾，GSC 會回報已提交但遭排除。
+			filter: (page) => !new URL(page).pathname.startsWith('/tags/'),
 			serialize(item) {
 				const slug = new URL(item.url).pathname.match(/^\/blog\/([^/]+)\/$/)?.[1];
 				const lastmod = slug && blogLastmod.get(slug);

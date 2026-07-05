@@ -9,6 +9,7 @@ import { getChapterContext } from '../lib/series';
 import { taxonomy } from '../data/taxonomy';
 import { getAllLeafTags, toSlug } from '../lib/taxonomy';
 import { SITE_AUTHOR } from '../consts';
+import { toShareImage } from '../lib/og-image';
 import Comments from '../components/Comments.astro';
 import { useTranslations } from '../i18n/utils';
 import { siteLocale } from '../i18n/ui';
@@ -61,7 +62,8 @@ for (const [groupName, groupNode] of Object.entries(taxonomy)) {
 // ── JSON-LD 結構化資料 ──
 const postUrl = new URL(Astro.url.pathname, Astro.site).href;
 const homeUrl = new URL('/', Astro.site).href;
-const imageUrl = new URL((heroImage ?? defaultHero).src, Astro.site).href;
+// 與 BaseHead 的 og:image 同源（縮壓後的分享圖），不用原圖 .src
+const imageUrl = new URL(await toShareImage(heroImage ?? defaultHero), Astro.site).href;
 const author = { '@type': 'Person', name: SITE_AUTHOR, url: homeUrl };
 
 const jsonLd = [
@@ -475,6 +477,10 @@ const jsonLd = [
 			.toc-sheet.open {
 				transform: translateY(0);
 			}
+			/* 容器承接程式化焦點（tabindex="-1"，modal-a11y 約定），不畫 focus ring */
+			.toc-sheet:focus {
+				outline: none;
+			}
 			@media (max-width: 900px) {
 				.toc-sheet {
 					display: block;
@@ -757,6 +763,10 @@ const jsonLd = [
 				background: rgba(0, 0, 0, 0.85);
 				pointer-events: auto;
 			}
+			/* 容器承接程式化焦點（tabindex="-1"，modal-a11y 約定），不畫 focus ring */
+			.img-lightbox:focus {
+				outline: none;
+			}
 			.img-lightbox img {
 				max-width: 90vw;
 				max-height: 90vh;
@@ -934,7 +944,7 @@ const jsonLd = [
 
 				<div class="toc-backdrop" id="toc-backdrop"></div>
 
-				<div class="toc-sheet" id="toc-sheet" role="dialog" aria-modal="true" aria-label={t('post.toc')}>
+				<div class="toc-sheet" id="toc-sheet" role="dialog" aria-modal="true" aria-label={t('post.toc')} tabindex="-1">
 					<div class="toc-sheet-handle"></div>
 					<div class="toc-sheet-header">
 						<span>{t('post.toc')}</span>
@@ -952,7 +962,7 @@ const jsonLd = [
 		)}
 
 		<!-- Image Lightbox -->
-		<div class="img-lightbox" id="img-lightbox" role="dialog" aria-modal="true" aria-label={t('post.imageZoom')}>
+		<div class="img-lightbox" id="img-lightbox" role="dialog" aria-modal="true" aria-label={t('post.imageZoom')} tabindex="-1">
 			<img id="lightbox-img" src="" alt="" />
 		</div>
 	</Fragment>
@@ -960,6 +970,7 @@ const jsonLd = [
 
 <script>
 			import { useTranslations } from '../i18n/utils';
+			import { trapModal, releaseModal } from '../lib/modal-a11y';
 			const t = useTranslations();
 
 			/* 重要：ClientRouter（View Transitions）換頁時不會重新執行此 module script，
@@ -1032,14 +1043,19 @@ const jsonLd = [
 				const closeBtn = document.getElementById('toc-sheet-close');
 
 				const openSheet = () => {
-					sheet?.classList.add('open');
+					if (!sheet || sheet.classList.contains('open')) return;
+					sheet.classList.add('open');
 					backdrop?.classList.add('open');
 					document.body.style.overflow = 'hidden';
+					// backdrop 是獨立的 body 子元素，要跳過 inert 才能「點背景關閉」
+					trapModal(sheet, { keep: [backdrop] });
 				};
 				const closeSheet = () => {
-					sheet?.classList.remove('open');
+					if (!sheet?.classList.contains('open')) return;
+					sheet.classList.remove('open');
 					backdrop?.classList.remove('open');
 					document.body.style.overflow = '';
+					releaseModal(); // 焦點還給 FAB
 				};
 
 				fab?.addEventListener('click', openSheet);
@@ -1097,10 +1113,13 @@ const jsonLd = [
 					lightboxImg.alt = alt;
 					lightbox.classList.add('open');
 					document.body.style.overflow = 'hidden';
+					trapModal(lightbox);
 				};
 				const closeLightbox = () => {
+					if (!lightbox.classList.contains('open')) return;
 					lightbox.classList.remove('open');
 					document.body.style.overflow = '';
+					releaseModal();
 				};
 
 				document.querySelectorAll<HTMLImageElement>('.prose img').forEach(img => {
@@ -1120,12 +1139,17 @@ const jsonLd = [
 				setupLightbox();
 			});
 
-			// Escape 關閉 sheet / lightbox：只掛一次（document 跨換頁存活），即時查 DOM
+			// Escape 關閉 sheet / lightbox：只掛一次（document 跨換頁存活），即時查 DOM。
+			// 先確認真的有開著的才動手，避免空按 Escape 誤觸 releaseModal 的焦點還原。
 			document.addEventListener('keydown', e => {
 				if (e.key !== 'Escape') return;
-				document.getElementById('toc-sheet')?.classList.remove('open');
+				const sheet = document.getElementById('toc-sheet');
+				const lightbox = document.getElementById('img-lightbox');
+				if (!sheet?.classList.contains('open') && !lightbox?.classList.contains('open')) return;
+				sheet?.classList.remove('open');
 				document.getElementById('toc-backdrop')?.classList.remove('open');
-				document.getElementById('img-lightbox')?.classList.remove('open');
+				lightbox?.classList.remove('open');
 				document.body.style.overflow = '';
+				releaseModal();
 			});
 </script>

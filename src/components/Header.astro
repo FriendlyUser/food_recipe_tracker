@@ -32,8 +32,9 @@ const t = useTranslations();
 	</nav>
 </header>
 
-<!-- 全站搜索 Overlay -->
-<div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label={t('search.label')} transition:persist>
+<!-- 全站搜索 Overlay。tabindex="-1"：開啟時焦點先落在容器（modal-a11y 約定），
+     Pagefind 載入後既有邏輯再把焦點移進輸入框 -->
+<div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label={t('search.label')} tabindex="-1" transition:persist>
 	<div class="search-backdrop" id="search-backdrop"></div>
 	<div class="search-modal">
 		<div id="pagefind-search"></div>
@@ -251,6 +252,10 @@ const t = useTranslations();
 	visibility: visible;
 	transition: visibility 0s;
 }
+/* 容器承接程式化焦點（tabindex="-1"），不畫 focus ring */
+.search-overlay:focus {
+	outline: none;
+}
 .search-backdrop {
 	position: absolute;
 	inset: 0;
@@ -368,6 +373,7 @@ const t = useTranslations();
 <script>
 	import { useTranslations } from '../i18n/utils';
 	import { isNavActive } from '../lib/nav';
+	import { trapModal, releaseModal } from '../lib/modal-a11y';
 	const t = useTranslations();
 
 	// ── Search ──
@@ -423,8 +429,11 @@ const t = useTranslations();
 	}
 
 	function openSearch() {
-		document.getElementById('search-overlay')?.classList.add('open');
+		const overlay = document.getElementById('search-overlay');
+		if (!overlay || overlay.classList.contains('open')) return; // 防重入（'/' 連按）
+		overlay.classList.add('open');
 		document.body.style.overflow = 'hidden';
+		trapModal(overlay); // 背景 inert；焦點先落容器，下面載入完再移進輸入框
 		loadPagefind().then(() => {
 			if (pagefindReady) {
 				setTimeout(() => {
@@ -435,8 +444,11 @@ const t = useTranslations();
 	}
 
 	function closeSearch() {
-		document.getElementById('search-overlay')?.classList.remove('open');
+		const overlay = document.getElementById('search-overlay');
+		if (!overlay?.classList.contains('open')) return; // 沒開就別動 trap 狀態
+		overlay.classList.remove('open');
 		document.body.style.overflow = '';
+		releaseModal(); // 解除 inert、焦點還給開啟前的元素
 	}
 
 	// ── Nav indicator ──

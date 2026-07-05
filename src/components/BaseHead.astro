@@ -6,6 +6,7 @@ import type { ImageMetadata } from "astro";
 import FallbackImage from "../assets/hero-image-holder.jpg";
 import { SITE_TITLE, SITE_AUTHOR } from "../consts";
 import { siteLocale } from "../i18n/ui";
+import { toShareImage } from "../lib/og-image";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -25,6 +26,9 @@ const {
     jsonLd,
     ogType = "website",
 } = Astro.props;
+
+// og:image 不能直接用 image.src（指向未優化原圖），統一走縮壓後的分享圖
+const shareImageSrc = await toShareImage(image);
 ---
 
 <!-- charset 必須落在 HTML 前 1024 bytes 內，故搶在所有 script（含 inline 主題判斷、
@@ -129,14 +133,15 @@ const {
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image.src, Astro.url)} />
+<meta property="og:image" content={new URL(shareImageSrc, Astro.url)} />
 
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={Astro.url} />
-<meta property="twitter:title" content={title} />
-<meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image.src, Astro.url)} />
+<!-- Twitter（X 規格是 name= 而非 property=；缺 twitter 標籤時 X 會 fallback 到 OG，
+     但 summary_large_image 這種 twitter 專屬欄位沒有 OG 對應，得靠 name= 正確讀到） -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={Astro.url} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={new URL(shareImageSrc, Astro.url)} />
 
 <!-- JSON-LD 結構化資料（schema.org）：跳脫 `<` 避免字串內容提早關閉 script -->
 {

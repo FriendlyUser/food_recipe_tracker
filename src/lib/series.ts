@@ -1,6 +1,13 @@
 // 系列文的 schema 與邏輯。實際內容資料在 src/data/series.ts。
 import { seriesData } from '../data/series';
 
+// heroImage 驗證用：series 卡背圖的合法 glob key 集合。
+// pattern 必須與 SeriesCard.astro 的 import.meta.glob 完全一致（那邊才是真正取圖的地方）；
+// 這裡不 eager、只要 key，建置期比對用。
+const seriesImageKeys = new Set(
+  Object.keys(import.meta.glob('/src/assets/series/*.{webp,jpg,jpeg,png,avif}')),
+);
+
 export type Chapter = {
   slug: string;    // 對應 blog post 的檔名（不含副檔名）
   title?: string;  // 省略時使用 post 的 title
@@ -35,18 +42,27 @@ export type SeriesData = Record<string, Domain>; // key＝URL slug（小寫英�
 //   且改顯示名＝斷鏈，所以 key 與 title 分離並在這裡把關。
 // - chapter slug 打錯字沒有型別錯誤，只會默默顯示 slug 字串並連去 404，
 //   故對照實際文章 id 檢查。錯誤一次列完、直接 fail build。
+// - heroImage 打錯字同樣沒有型別錯誤，SeriesCard 只會默默 fallback 成漸層底，
+//   故對照 src/assets/series/ 的實際檔案檢查，與 chapter slug 同一套把關。
 export function validateSeriesData(postIds: Set<string>): void {
   const errors: string[] = [];
   const isSlug = (s: string) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s);
+  const checkHeroImage = (heroImage: string | undefined, owner: string) => {
+    if (heroImage && !seriesImageKeys.has(heroImage)) {
+      errors.push(`${owner} 的 heroImage "${heroImage}" 在 src/assets/series/ 找不到對應檔案`);
+    }
+  };
 
   for (const [domainKey, domain] of Object.entries(seriesData)) {
     if (!isSlug(domainKey)) {
       errors.push(`domain key "${domainKey}" 不是 URL-safe slug（小寫英數與連字號）`);
     }
+    checkHeroImage(domain.heroImage, `domain「${domain.title}」`);
     for (const [seriesKey, series] of Object.entries(domain.series)) {
       if (!isSlug(seriesKey)) {
         errors.push(`series key "${seriesKey}"（${series.title}）不是 URL-safe slug（小寫英數與連字號）`);
       }
+      checkHeroImage(series.heroImage, `系列「${series.title}」`);
       for (const part of series.parts) {
         for (const ch of part.chapters) {
           if (!postIds.has(ch.slug)) {
