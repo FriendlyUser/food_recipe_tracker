@@ -92,6 +92,19 @@ Post frontmatter fields: `title` (required), `description`, `pubDate`
 webp — hero / series / avatar) live in `src/assets/`; assets served verbatim
 (favicon, fonts, `_headers`) live in `public/`.
 
+## Documentation
+
+Deeper guides live in [`docs/`](./docs/) (English and 繁體中文):
+
+- [Content](./docs/en/content.md) — post frontmatter, the series data model,
+  tags, and language facets.
+- [Customization](./docs/en/customization.md) — color palette, fonts (swap or
+  drop them), favicons.
+- [Comments](./docs/en/comments.md) — enabling Giscus and wiring up other
+  providers.
+
+The demo posts under `src/content/blog/` also double as documentation.
+
 ## Project structure
 
 ```text

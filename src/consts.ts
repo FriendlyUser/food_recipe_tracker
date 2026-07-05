@@ -1,5 +1,4 @@
-// Place any global data in this file.
-// You can import this data from anywhere in your site by using the `import` keyword.
+// 站台層級的全域設定：站名、描述、作者、社群連結、內容授權等。要客製先從這裡改。
 
 export const SITE_TITLE = '碧落 Biluo';
 export const SITE_DESCRIPTION = '以 Astro 打造的部落格主題。把這幾行換成你自己的站名與描述。';

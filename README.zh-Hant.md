@@ -87,6 +87,16 @@ RSS／sitemap／llms.txt，以及 i18n-ready 的單一語系設計。
 **圖片放哪**：要經 Astro 優化（縮放／webp，hero／series／avatar）放 `src/assets/`；
 原樣輸出（favicon、字型、`_headers`）放 `public/`。
 
+## 文件
+
+更深入的指南放在 [`docs/`](./docs/)（英文與繁體中文）：
+
+- [內容](./docs/zh-Hant/content.md) — 文章 frontmatter、系列文資料模型、標籤、語言分面。
+- [客製化](./docs/zh-Hant/customization.md) — 配色、字型（抽換或移除）、favicon。
+- [留言板](./docs/zh-Hant/comments.md) — 啟用 Giscus 與接上其他 provider。
+
+`src/content/blog/` 下的 demo 文同時也是文件。
+
 ## 專案結構
 
 ```text
