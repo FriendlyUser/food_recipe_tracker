@@ -100,8 +100,14 @@ Deeper guides live in [`docs/`](./docs/) (English and 繁體中文):
   tags, and language facets.
 - [Customization](./docs/en/customization.md) — color palette, fonts (swap or
   drop them), favicons.
+- [Search](./docs/en/search.md) — how Pagefind indexes the site, and why search
+  is blank in `pnpm dev`.
 - [Comments](./docs/en/comments.md) — enabling Giscus and wiring up other
   providers.
+- [Deployment](./docs/en/deployment.md) — Cloudflare Workers and other static
+  hosts.
+- [SEO and crawlers](./docs/en/seo-and-crawlers.md) — robots.txt and the
+  AI-crawler policy, sitemap, social previews, `llms.txt`.
 
 The demo posts under `src/content/blog/` also double as documentation.
 

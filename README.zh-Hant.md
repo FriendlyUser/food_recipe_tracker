@@ -93,7 +93,10 @@ RSS／sitemap／llms.txt，以及 i18n-ready 的單一語系設計。
 
 - [內容](./docs/zh-Hant/content.md) — 文章 frontmatter、系列文資料模型、標籤、語言分面。
 - [客製化](./docs/zh-Hant/customization.md) — 配色、字型（抽換或移除）、favicon。
+- [搜尋](./docs/zh-Hant/search.md) — Pagefind 怎麼建索引，以及為何 `pnpm dev` 搜不到東西。
 - [留言板](./docs/zh-Hant/comments.md) — 啟用 Giscus 與接上其他 provider。
+- [部署](./docs/zh-Hant/deployment.md) — Cloudflare Workers 與其他靜態主機。
+- [SEO 與爬蟲](./docs/zh-Hant/seo-and-crawlers.md) — robots.txt 與 AI 爬蟲政策、sitemap、社群預覽、`llms.txt`。
 
 `src/content/blog/` 下的 demo 文同時也是文件。
 
