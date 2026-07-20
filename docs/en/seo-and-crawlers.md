@@ -87,12 +87,8 @@ spec, not a typo.
 `/llms.txt` follows [llmstxt.org](https://llmstxt.org): a plain-text site guide
 for AI agents, listing every post and series with descriptions. It is generated
 from the blog collection and `src/data/series.ts`, so it never needs manual
-maintenance.
-
-> [!NOTE]
-> `src/pages/llms.txt.ts` has a few section headings and one sentence written
-> directly in Traditional Chinese rather than pulled from `src/i18n/ui.ts`. If
-> you run an English-first site, translate those strings in that file.
+maintenance. Its headings and prose come from the `llms.*` keys in
+`src/i18n/ui.ts`, so it follows the site locale along with everything else.
 
 The blogroll is deliberately excluded from both `llms.txt` and the sitemap: it
 is human navigation to other people's sites, not content of your own.

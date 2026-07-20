@@ -77,11 +77,8 @@ Twitter 的標籤用 `name=` 而非 `property=`；這符合它的規範，不是
 
 `/llms.txt` 遵循 [llmstxt.org](https://llmstxt.org)：一份給 AI agent 看的純文字
 網站導覽，列出所有文章與系列及其描述。它由 blog collection 與
-`src/data/series.ts` 自動產生，永遠不需要手動維護。
-
-> [!NOTE]
-> `src/pages/llms.txt.ts` 有幾個區塊標題與一句話是直接寫死的繁體中文，沒有走
-> `src/i18n/ui.ts`。若你要做英文為主的站，請直接在該檔翻譯這些字串。
+`src/data/series.ts` 自動產生，永遠不需要手動維護。標題與句子取自
+`src/i18n/ui.ts` 的 `llms.*` key，因此和其他部分一樣跟著站台語系走。
 
 友站清單（blogroll）刻意排除在 `llms.txt` 與 sitemap 之外：那是通往別人網站的
 人類導覽，不是你自己的內容。

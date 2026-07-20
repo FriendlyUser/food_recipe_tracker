@@ -137,6 +137,11 @@ export const ui = {
     'rss.visitSite': '造訪網站 →',
     'rss.latestPosts': '最新文章',
     'rss.readMore': '閱讀全文 →',
+
+    // ── llms.txt（給 AI agent 的網站導覽純文字檔）──
+    'llms.operatedBy': '本站由 {author} 經營。',
+    'llms.postsHeading': '文章',
+    'llms.seriesHeading': '系列',
   },
 } as const;
 
