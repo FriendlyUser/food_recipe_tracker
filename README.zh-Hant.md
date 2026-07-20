@@ -75,7 +75,7 @@ RSS／sitemap／llms.txt，以及 i18n-ready 的單一語系設計。
 | 系列文（內容） | `src/data/series.ts`（型別／邏輯在 `src/lib/series.ts`） |
 | 標籤分類與群組 | `src/data/taxonomy.ts`（型別／邏輯在 `src/lib/taxonomy.ts`） |
 | 友站清單 | `src/data/blogroll.ts` |
-| 留言板（Giscus） | `src/data/comments.ts`（值到 [giscus.app](https://giscus.app) 取得，皆非機密） |
+| 留言板（Giscus） | `src/data/comments.ts`（值到 [giscus.app](https://giscus.app) 取得） |
 | UI 字串（i18n） | `src/i18n/ui.ts` |
 | 站台 URL／Markdown 管線／轉址／sitemap | `astro.config.mjs` |
 | Cloudflare 部署（404 處理、assets 目錄） | `wrangler.jsonc` |

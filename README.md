@@ -79,7 +79,7 @@ sitemap / llms.txt, and an i18n-ready single-locale design.
 | Series (content) | `src/data/series.ts` (types / logic in `src/lib/series.ts`) |
 | Tags taxonomy & groups | `src/data/taxonomy.ts` (types / logic in `src/lib/taxonomy.ts`) |
 | Blogroll | `src/data/blogroll.ts` |
-| Comments (Giscus) | `src/data/comments.ts` (values from [giscus.app](https://giscus.app), all non-secret) |
+| Comments (Giscus) | `src/data/comments.ts` (values from [giscus.app](https://giscus.app)) |
 | UI strings (i18n) | `src/i18n/ui.ts` |
 | Site URL / Markdown pipeline / redirects / sitemap | `astro.config.mjs` |
 | Cloudflare deploy (404 handling, assets dir) | `wrangler.jsonc` |

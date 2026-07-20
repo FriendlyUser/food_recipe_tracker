@@ -50,5 +50,5 @@
     "rehype-autolink-headings": "^7.1.0",
     "wrangler": "^4.95.0"
   },
-  "packageManager": "pnpm@11.9.0"
+  "packageManager": "pnpm@11.13.0"
 }
