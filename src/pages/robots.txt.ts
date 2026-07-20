@@ -6,18 +6,15 @@ import type { APIRoute } from 'astro';
 // 全站開放爬取：Tags 分頁雖然「不索引」，但那是用各頁 meta 的 noindex,follow
 // 控制的；這裡刻意不 Disallow，否則爬蟲連進去 follow 文章連結都被擋掉。
 //
-// AI 爬蟲政策：全部開放。不額外列 GPTBot / ClaudeBot / CCBot 等 AI bot，
-// 一律沿用 `User-agent: *` 的 Allow: /，歡迎被 AI 收錄與引用（刻意決定，非遺漏）。
-//
-// Content Signals（contentsignals.org / Cloudflare 推動的 robots.txt 內容用途宣告）：
-// 三項偏好全設 yes，與上述全開政策一致——
-//   search    = 可建索引、提供搜尋結果
-//   ai-input  = 可即時檢索餵入 AI（RAG／grounding／生成式搜尋答案）
-//   ai-train  = 可用於訓練／微調模型
-// 註：這是偏好宣告，非技術性封鎖；不守規矩的爬蟲仍可能忽略。
+// Content Signals 預設：擋訓練、留檢索——
+//   search=yes    可建索引、提供搜尋結果
+//   ai-input=yes  可即時檢索餵入 AI（RAG／grounding），讓你的文章能被附連結引用
+//   ai-train=no   不可用於訓練／微調模型
+// 這是偏好宣告而非技術封鎖，且刻意不列具名 AI bot 的 Disallow（名單會過期）。
+// 三項旗標的取捨與改法見 docs/zh-Hant/seo-and-crawlers.md。
 const robotsTxt = (sitemapURL: URL) => `\
 User-agent: *
-Content-Signal: search=yes, ai-input=yes, ai-train=yes
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 
 Sitemap: ${sitemapURL.href}
