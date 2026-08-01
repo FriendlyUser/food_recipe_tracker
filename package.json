@@ -41,14 +41,14 @@
     "@astrojs/mdx": "^7.0.5",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^7.1.5",
+    "astro": "^7.1.6",
     "remark-github-blockquote-alert": "^2.1.0",
     "sharp": "^0.35.3"
   },
   "devDependencies": {
     "pagefind": "^1.5.2",
     "rehype-autolink-headings": "^7.1.0",
-    "wrangler": "^4.112.0"
+    "wrangler": "^4.116.0"
   },
-  "packageManager": "pnpm@11.15.1"
+  "packageManager": "pnpm@11.18.0"
 }
