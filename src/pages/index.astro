@@ -73,7 +73,7 @@ const jsonLd = [
 					<h2 class="section-title">{t('home.pinned')}</h2>
 					<a
 						class="pinned-card"
-						href={`/blog/${pinnedPost.id}/`}
+						href={`${import.meta.env.BASE_URL}/blog/${pinnedPost.id}/`}
 					>
 						<div class="pinned-banner">
 							<Image
@@ -106,7 +106,7 @@ const jsonLd = [
 				<section class="home-section">
 					<div class="section-header">
 						<h2 class="section-title">{t('home.featuredSeries')}</h2>
-						<a class="see-all" href="/series/">{t('home.seeAllSeries')}</a>
+						<a class="see-all" href={`${import.meta.env.BASE_URL}/series/`}>{t('home.seeAllSeries')}</a>
 					</div>
 					<div class="series-grid">
 						{featuredSeries.map(s => (
