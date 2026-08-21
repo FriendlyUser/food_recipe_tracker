@@ -65,9 +65,9 @@ export default defineConfig({
 			// 預設標籤是英文 "Footnotes" 且 sr-only 隱藏；改成可見的「註解」h2、↩ 在地化。
 			// 註腳區塊一律生成在文件最末（GFM 硬限制，位置不可調）。
 			remarkRehype: {
-				footnoteLabel: '註解',
+				footnoteLabel: 'Footnotes',
 				footnoteLabelProperties: {}, // 清掉預設的 sr-only class → 標題可見
-				footnoteBackLabel: '回到內文',
+				footnoteBackLabel: 'Back to content',
 			},
 			// GitHub 警示語法 `> [!NOTE]` → markdown-alert class（樣式在 BlogPost，與外掛解耦）
 			remarkPlugins: [remarkAlert],

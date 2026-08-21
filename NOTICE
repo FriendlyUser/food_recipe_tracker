@@ -18,13 +18,6 @@ The fonts shipped under public/fonts/ are licensed under the SIL Open
 Font License, Version 1.1, NOT under the MIT License above. Each font's
 full license and copyright notice travels with it:
 
-  * Chiron GoRound TC (昭源圜方)
-      Source:  https://chiron-fonts.github.io/
-               https://github.com/chiron-fonts/chiron-go-round-tc
-      License: public/fonts/chiron-go-round-tc-1.011/OFL.txt
-      Copyright 2024-2026 Tamcy; Copyright 2014-2025 Adobe;
-      Copyright 2016 The Nunito Sans Project Authors.
-
   * Nunito
       Source:  https://github.com/googlefonts/nunito (Google Fonts)
       License: public/fonts/Nunito-OFL.txt

@@ -7,7 +7,7 @@
 // 取值與插值統一走 src/i18n/utils.ts 的 useTranslations()。
 // 模板插值用 {name} 佔位（注意 Pagefind 自己的 [COUNT] / [SEARCH_TERM] 不是我們的佔位，原樣保留）。
 
-export const defaultLang = 'zh-hant' as const;
+export const defaultLang = 'en' as const;
 
 export const ui = {
   'zh-hant': {
@@ -143,6 +143,139 @@ export const ui = {
     'llms.postsHeading': '文章',
     'llms.seriesHeading': '系列',
   },
+  'en': {
+    // ── Navigation Bar (Header) ──
+    'nav.blog': 'Blog',
+    'nav.tags': 'Tags',
+    'nav.series': 'Series',
+    'nav.blogroll': 'Blogroll',
+    'nav.about': 'About',
+    'nav.menu': 'Menu',
+
+    // ── Site Search (Header / Pagefind) ──
+    'search.label': 'Search',
+    'search.placeholder': 'Search posts…',
+    'search.zeroResults': 'No results found',
+    'search.manyResults': 'Found [COUNT] results for "[SEARCH_TERM]"',
+    'search.oneResult': 'Found [COUNT] result for "[SEARCH_TERM]"',
+    'search.loadMore': 'Load more results',
+    'search.searching': 'Searching…',
+    'search.devNotice': 'Search feature is available after <code>pnpm build</code>',
+
+    // ── Theme Toggle ──
+    'theme.toggle': 'Toggle theme',
+
+    // ── Footer ──
+    // Author name and license code are not hardcoded here (they belong to site identity, not translatable UI strings) — injected into Footer from consts via {author}/{license}.
+    'footer.copyright': '© {year} {author}. {license}.',
+    'footer.rssLabel': 'Subscribe to RSS',
+
+    // ── Content License (Localized presentation) ──
+    // Default: "All rights reserved": License code is in consts.CONTENT_LICENSE.
+    // The following three values are only used when a CC-like license is set: when license.url is not empty, the About page will render
+    // license.fullName as a link pointing to that deed, appended with license.contact terms;
+    // Defaults to empty → About page only displays "© Author. All rights reserved.".
+    'license.fullName': 'All rights reserved',
+    'license.url': '',
+    'license.contact': '',
+    // Example for switching to CC BY-NC-ND 4.0 (replace the three lines above with this set and set consts.CONTENT_LICENSE to the corresponding code):
+    //   'license.fullName': 'CC BY-NC-ND 4.0 Attribution-NonCommercial-NoDerivatives 4.0 International',
+    //   'license.url': 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+    //   'license.contact': 'Please reach out if you need commercial use, adaptation, or translation.',
+
+    // ── Pagination ──
+    'pagination.nav': 'Post Pagination',
+    'pagination.prev': 'Previous',
+    'pagination.next': 'Next',
+
+    // ── Blog Post Page (BlogPost) ──
+    'post.toc': 'Table of Contents',
+    'post.openToc': 'Open Table of Contents',
+    'post.closeToc': 'Close Table of Contents',
+    'post.related': 'Related Posts',
+    'post.lastUpdated': 'Last updated on',
+    'post.readingTime': '{n} min read',
+    'post.belongsTo': 'This post belongs to:',
+    'post.prev': '← Previous Post',
+    'post.next': 'Next Post →',
+    'post.copyCode': 'Copy Code',
+    'post.imageZoom': 'Zoom Image',
+    'post.seriesNav': 'Series Navigation',
+    'breadcrumb.home': 'Home',
+    'breadcrumb.blog': 'Posts',
+
+    // ── Comments ──
+    'comments.title': 'Comments',
+    'comments.load': 'Load Comments',
+
+    // ── Post List (blog index / page) ──
+    'blog.allPosts': 'All Posts',
+    'blog.metaDescription': 'List of all posts',
+    'blog.totalCount': '{n} posts total',
+    'blog.pageInfo': '{total} posts in total · Page {current} of {last}',
+    'blog.pageTitle': 'All Posts - Page {n}',
+
+    // ── Tags (tags index / [...path]) ──
+    'tags.title': 'Tags',
+    'tags.metaDescription': 'All post tags',
+    'tags.viewAll': 'View All',
+    'tags.sectionCount': '{n} posts',
+    'tags.postCount': '{n} posts',
+    'tags.leafDescription': 'Posts tagged with "{name}"',
+    'tags.groupDescription': 'Posts under the "{name}" category',
+    'tags.empty': 'There are no posts for this tag yet.',
+    'tags.orphanTitle': 'Uncategorized',
+    'tags.orphanHint': 'Tags not yet categorized in the taxonomy tree',
+    'tags.planned': 'Planned',
+
+    // ── Blogroll (Display name "Links") ──
+    'blogroll.title': 'Blogroll',
+    'blogroll.metaDescription': 'Links to friendly blogs and websites',
+    'blogroll.intro': 'Great places worth visiting across the web.',
+    'blogroll.empty': 'No links added yet. Stay tuned! ✨',
+
+    // ── Series ──
+    'series.title': 'Series',
+    'series.metaDescription': 'Post series organized by topic',
+    'series.empty': 'Series coming soon.',
+    'series.domainMetaDescription': '{title} Series',
+    'series.detailMetaDescription': '{title} Series Directory',
+    'series.seriesCount': '{n} series',
+    'series.chapterCount': '{n} posts',
+    'series.partCount': '{n} parts',
+    'series.partAndChapters': '{parts} parts · {chapters} posts',
+
+    // ── Home Page Sections (index) ──
+    'home.pinned': 'Pinned Posts',
+    'home.pinnedBadge': 'Pinned',
+    'home.featuredSeries': 'Featured Series',
+    'home.seeAllSeries': 'View All Series →',
+    'home.latestPosts': 'Latest Posts',
+
+    // ── About (about, meta only; bio content stays in the page template) ──
+    'about.title': 'About Me',
+    'about.metaDescription': 'About this blog and the author',
+
+    // ── 404 Page Not Found ──
+    'notFound.metaTitle': '404 — Page Not Found',
+    'notFound.metaDescription': 'This page does not exist or has been moved.',
+    'notFound.heading': 'This Page Does Not Exist',
+    'notFound.message': 'The page you are looking for might have been moved, renamed, or never existed. Check the URL or start over from the links below.',
+    'notFound.home': '← Back to Home',
+    'notFound.linksLabel': 'Or visit',
+
+    // ── RSS Stylesheet (Readable page when viewing feed directly in browser) ──
+    'rss.badge': 'RSS Feed',
+    'rss.subscribeHint': 'This is an RSS feed. Copy and paste this URL into your RSS reader to automatically get updates when new posts are published.',
+    'rss.visitSite': 'Visit Website →',
+    'rss.latestPosts': 'Latest Posts',
+    'rss.readMore': 'Read More →',
+
+    // ── llms.txt (Text site navigation guide for AI agents) ──
+    'llms.operatedBy': 'This site is operated by {author}.',
+    'llms.postsHeading': 'Posts',
+    'llms.seriesHeading': 'Series',
+  },
 } as const;
 
 export type Lang = keyof typeof ui;
@@ -156,6 +289,7 @@ export type UIKey = keyof (typeof ui)[typeof defaultLang];
 // 單語言時全站只引用下面的 siteLocale；日後加語言時，各語言在這裡補一筆即可。
 export const localeTags = {
   'zh-hant': { html: 'zh-Hant', og: 'zh_TW', intl: 'zh-Hant', giscus: 'zh-TW' },
+  'en': { html: 'en', og: 'en_US', intl: 'en', giscus: 'en' }
 } as const satisfies Record<Lang, { html: string; og: string; intl: string; giscus: string }>;
 
 // 目前單語言：直接解析成預設語言的標籤組。
