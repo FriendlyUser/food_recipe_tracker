@@ -8,13 +8,13 @@ const t = useTranslations();
 
 <header transition:persist transition:animate="none">
 	<nav>
-		<h2><a href="/">{SITE_TITLE}</a></h2>
+		<h2><a href={import.meta.env.BASE_URL}>{SITE_TITLE}</a></h2>
 		<div class="internal-links" id="nav-menu">
-			<HeaderLink href="/blog">{t('nav.blog')}</HeaderLink>
-			<HeaderLink href="/tags">{t('nav.tags')}</HeaderLink>
-			<HeaderLink href="/series">{t('nav.series')}</HeaderLink>
-			<HeaderLink href="/blogroll">{t('nav.blogroll')}</HeaderLink>
-			<HeaderLink href="/about">{t('nav.about')}</HeaderLink>
+			<HeaderLink href={`${import.meta.env.BASE_URL}/blog`}>{t('nav.blog')}</HeaderLink>
+			<HeaderLink href={`${import.meta.env.BASE_URL}/tags`}>{t('nav.tags')}</HeaderLink>
+			<HeaderLink href={`${import.meta.env.BASE_URL}/series`}>{t('nav.series')}</HeaderLink>
+			<HeaderLink href={`${import.meta.env.BASE_URL}/blogroll`}>{t('nav.blogroll')}</HeaderLink>
+			<HeaderLink href={`${import.meta.env.BASE_URL}/about`}>{t('nav.about')}</HeaderLink>
 			<span class="nav-indicator" aria-hidden="true"></span>
 		</div>
 		<div class="social-links">
