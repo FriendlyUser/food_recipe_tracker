@@ -14,8 +14,8 @@ export const seriesData: SeriesData = {
     heroImage: "/src/assets/series/guide-en.webp",
     heroDarkness: 0.5,
     series: {
-      "getting-started-en": {
-        title: "Getting Started (English)",
+      "chicken-wings-en": {
+        title: "Chicken Wings (English)",
         description: "Install the theme, learn the syntax, make it your own.",
         heroImage: "/src/assets/series/guide-en.webp",
         heroDarkness: 0.45,
@@ -24,7 +24,7 @@ export const seriesData: SeriesData = {
           {
             title: "Basics",
             chapters: [
-              { slug: "getting-started" },
+              { slug: "chicken-wings" },
               { slug: "markdown-syntax" },
               { slug: "going-english-first" },
             ],
@@ -41,7 +41,6 @@ export const seriesData: SeriesData = {
           {
             title: "基礎",
             chapters: [
-              { slug: "getting-started-zh" },
               { slug: "markdown-syntax-zh" },
             ],
           },
