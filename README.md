@@ -1,10 +1,10 @@
-English | [繁體中文](./README.zh-Hant.md)
+English
 
 <p align="center">
   <img src="./src/assets/avatar.png" width="140" alt="Biluo logo" />
 </p>
 
-<h1 align="center">Biluo (碧落)</h1>
+<h1 align="center">Biluo</h1>
 
 <p align="center">
   <img src="./assets/banner.png" alt="Biluo — light and dark themes, split by the theme-toggle's circular reveal" />
